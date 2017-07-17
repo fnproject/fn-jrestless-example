@@ -1,0 +1,5 @@
+name: raej/jrest
+version: 0.0.14
+runtime: java
+cmd: com.oracle.faas.jrestlessexample.ExampleClass::handleRequest
+path: /entry
