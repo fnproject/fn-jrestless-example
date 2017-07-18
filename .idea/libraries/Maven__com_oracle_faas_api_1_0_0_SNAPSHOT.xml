@@ -1,13 +1,13 @@
 <component name="libraryTable">
   <library name="Maven: com.oracle.faas:api:1.0.0-SNAPSHOT">
     <CLASSES>
-      <root url="jar://$MAVEN_REPOSITORY$/com/oracle/faas/api/1.0.0-SNAPSHOT/api-1.0.0-20170714.153808-40.jar!/" />
+      <root url="jar://$MAVEN_REPOSITORY$/com/oracle/faas/api/1.0.0-SNAPSHOT/api-1.0.0-20170717.162339-46.jar!/" />
     </CLASSES>
     <JAVADOC>
-      <root url="jar://$MAVEN_REPOSITORY$/com/oracle/faas/api/1.0.0-SNAPSHOT/api-1.0.0-20170714.153808-40-javadoc.jar!/" />
+      <root url="jar://$MAVEN_REPOSITORY$/com/oracle/faas/api/1.0.0-SNAPSHOT/api-1.0.0-20170717.162339-46-javadoc.jar!/" />
     </JAVADOC>
     <SOURCES>
-      <root url="jar://$MAVEN_REPOSITORY$/com/oracle/faas/api/1.0.0-SNAPSHOT/api-1.0.0-20170714.153808-40-sources.jar!/" />
+      <root url="jar://$MAVEN_REPOSITORY$/com/oracle/faas/api/1.0.0-SNAPSHOT/api-1.0.0-20170717.162339-46-sources.jar!/" />
     </SOURCES>
   </library>
 </component>

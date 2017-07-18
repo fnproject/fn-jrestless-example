@@ -3,6 +3,7 @@ package com.oracle.faas.jrestlessexample;
 import com.jrestless.core.container.handler.SimpleRequestHandler;
 import com.jrestless.core.container.io.DefaultJRestlessContainerRequest;
 import com.jrestless.core.container.io.JRestlessContainerRequest;
+import com.jrestless.core.container.io.RequestAndBaseUri;
 import com.oracle.faas.api.InputEvent;
 import com.oracle.faas.api.OutputEvent;
 import org.slf4j.Logger;
@@ -19,6 +20,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
+import java.net.URI;
 
 import static java.util.Objects.requireNonNull;
 
@@ -31,28 +33,35 @@ public abstract class OracleFunctionsRequestHandler extends SimpleRequestHandler
     protected JRestlessContainerRequest createContainerRequest(InputEvent inputEvent) {
         requireNonNull(inputEvent);
 
-        URI baseUri = null;
-        try {
-            baseUri = new URI("http://localhost:8080/r/example");
-        } catch (URISyntaxException e) {
-            e.printStackTrace();
-        }
+        String reqUrl = inputEvent.getRequestUrl();
+        String appName = inputEvent.getAppName();
 
-        URI requestUri = null;
-        try {
-            requestUri = new URI("/entry");
-        } catch (URISyntaxException e) {
-            e.printStackTrace();
-        }
+        String base = getBase(reqUrl, appName);
+        String path = inputEvent.getRoute();
 
-        System.err.println("req url: " + inputEvent.getRequestUrl());
-        System.err.println("route: " + inputEvent.getRoute());
+        URI baseUri = URI.create("/");
+        URI requestUri = URI.create(path);
+
+        RequestAndBaseUri requestAndBaseUri = new RequestAndBaseUri(baseUri, requestUri);
 
         String httpMethod = inputEvent.getMethod();
         InputStream entityStream = returnStream(inputEvent);
         Map<String, List<String>> headers = formatHeaders(inputEvent.getHeaders());
 
-        return new DefaultJRestlessContainerRequest(baseUri, requestUri, httpMethod, entityStream, headers);
+        DefaultJRestlessContainerRequest container = new DefaultJRestlessContainerRequest(requestAndBaseUri, httpMethod, entityStream, headers);
+
+        System.err.println(container.toString());
+
+        return container;
+    }
+
+    private String getBase(String fullUrl, String appName){
+        if (fullUrl.contains(appName)){
+            String[] parts = fullUrl.split(appName);
+            return parts[0] + appName;
+        } else {
+            throw new IllegalArgumentException("The URL " + fullUrl + " does not contain " + appName);
+        }
     }
 
     private Map<String, List<String>> formatHeaders(Map<String, String> jfaasHeaders) {

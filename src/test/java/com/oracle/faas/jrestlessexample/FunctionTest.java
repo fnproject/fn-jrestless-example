@@ -12,7 +12,12 @@ public class FunctionTest {
 
     @Test
     public void shouldReturnText() {
-        testing.givenEvent().enqueue();
+        testing.givenEvent()
+                .withRequestUrl("http://localhost:8080/r/myapp/route")
+                .withRoute("/route")
+                .withAppName("myapp")
+                .withMethod("GET")
+                .enqueue();
 
         testing.thenRun(ExampleClass.class, "handleRequest");
 
