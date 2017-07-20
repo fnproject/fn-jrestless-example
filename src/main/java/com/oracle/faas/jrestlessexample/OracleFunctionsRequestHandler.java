@@ -4,6 +4,7 @@ import com.jrestless.core.container.handler.SimpleRequestHandler;
 import com.jrestless.core.container.io.DefaultJRestlessContainerRequest;
 import com.jrestless.core.container.io.JRestlessContainerRequest;
 import com.jrestless.core.container.io.RequestAndBaseUri;
+import com.jrestless.core.util.HeaderUtils;
 import com.oracle.faas.api.InputEvent;
 import com.oracle.faas.api.OutputEvent;
 import org.slf4j.Logger;
@@ -12,31 +13,29 @@ import org.slf4j.LoggerFactory;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.ws.rs.core.Response;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.io.*;
 import java.net.URI;
-import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
-import java.net.URI;
 
 import static java.util.Objects.requireNonNull;
 
-public abstract class OracleFunctionsRequestHandler extends SimpleRequestHandler<InputEvent, OutputEvent> {
+public abstract class OracleFunctionsRequestHandler extends SimpleRequestHandler<OracleFunctionsRequestHandler.WrappedInput, OutputEvent> {
     private static final Logger LOG = LoggerFactory.getLogger(OracleFunctionsRequestHandler.class);
     private String defaultContentType = "applications/json";
     private boolean success = true;
 
+    protected OracleFunctionsRequestHandler(){
 
-    protected JRestlessContainerRequest createContainerRequest(InputEvent inputEvent) {
+    }
+
+
+    protected JRestlessContainerRequest createContainerRequest(WrappedInput wrappedInput) {
+        InputEvent inputEvent = wrappedInput.inputEvent;
+        InputStream entityStream = wrappedInput.stream;
+
         requireNonNull(inputEvent);
 
-        String reqUrl = inputEvent.getRequestUrl();
-        String appName = inputEvent.getAppName();
-
-        String base = getBase(reqUrl, appName);
         String path = inputEvent.getRoute();
 
         URI baseUri = URI.create("/");
@@ -45,42 +44,19 @@ public abstract class OracleFunctionsRequestHandler extends SimpleRequestHandler
         RequestAndBaseUri requestAndBaseUri = new RequestAndBaseUri(baseUri, requestUri);
 
         String httpMethod = inputEvent.getMethod();
-        InputStream entityStream = returnStream(inputEvent);
-        Map<String, List<String>> headers = formatHeaders(inputEvent.getHeaders());
 
-        DefaultJRestlessContainerRequest container = new DefaultJRestlessContainerRequest(requestAndBaseUri, httpMethod, entityStream, headers);
+        DefaultJRestlessContainerRequest container = new DefaultJRestlessContainerRequest(
+                requestAndBaseUri,
+                httpMethod,
+                entityStream,
+                HeaderUtils.expandHeaders(inputEvent.getHeaders()));
 
         System.err.println(container.toString());
 
         return container;
     }
 
-    private String getBase(String fullUrl, String appName){
-        if (fullUrl.contains(appName)){
-            String[] parts = fullUrl.split(appName);
-            return parts[0] + appName;
-        } else {
-            throw new IllegalArgumentException("The URL " + fullUrl + " does not contain " + appName);
-        }
-    }
-
-    private Map<String, List<String>> formatHeaders(Map<String, String> jfaasHeaders) {
-        Map<String, List<String>> configuredHeaders = new HashMap<>();
-
-        for( String header : jfaasHeaders.keySet() ){
-            List<String> headerValues = new ArrayList<>();
-            headerValues.add(jfaasHeaders.get(header));
-            configuredHeaders.put(header, headerValues);
-        }
-        return configuredHeaders;
-    }
-
-    private InputStream returnStream(InputEvent rawInput) {
-        return rawInput.consumeBody(inputStream -> inputStream);
-    }
-
-
-    protected SimpleResponseWriter<OutputEvent> createResponseWriter(@Nonnull InputEvent inputEvent) {
+    protected SimpleResponseWriter<OutputEvent> createResponseWriter(@Nonnull WrappedInput wrappedInput) {
         return new ResponseWriter();
     }
 
@@ -97,28 +73,36 @@ public abstract class OracleFunctionsRequestHandler extends SimpleRequestHandler
             return new ByteArrayOutputStream();
         }
 
+        //TODO: Replace the casting in this function
         @Override
         public void writeResponse(@Nonnull Response.StatusType statusType, @Nonnull Map<String, List<String>> map, @Nonnull OutputStream outputStream) throws IOException {
-            System.err.println("" + statusType);
-            System.err.println("" + map);
             String responseBody = ((ByteArrayOutputStream) outputStream).toString(StandardCharsets.UTF_8.name());
             String contentType = map.getOrDefault("Content-Type", Collections.singletonList(defaultContentType)).get(0);
-            response = OutputEvent.fromBytes(responseBody.getBytes(), success, contentType + "foo");
+            response = OutputEvent.fromBytes(responseBody.getBytes(), success, contentType);
         }
     }
 
-    protected OutputEvent onRequestFailure(Exception e, InputEvent inputEvent, @Nullable JRestlessContainerRequest jRestlessContainerRequest) {
+    protected OutputEvent onRequestFailure(Exception e, WrappedInput wrappedInput, @Nullable JRestlessContainerRequest jRestlessContainerRequest) {
         LOG.error("request failed", e);
         System.err.println("request failed" + e.getMessage());
         e.printStackTrace();
-        return null;
+        return OutputEvent.emptyResult(false);
     }
 
     public OutputEvent handleRequest(InputEvent inputEvent){
-        System.err.println("Here we are");
-        OutputEvent outputEvent = this.delegateRequest(inputEvent);
-        return outputEvent;
+        return inputEvent.consumeBody((inputStream) -> {
+            WrappedInput wrappedInput = new WrappedInput(inputEvent,inputStream);
+            return this.delegateRequest(wrappedInput);
+        });
     }
 
+    static class WrappedInput {
+        final InputEvent inputEvent;
+        final InputStream stream;
 
+        WrappedInput(InputEvent inputEvent, InputStream stream) {
+            this.inputEvent = inputEvent;
+            this.stream = stream;
+        }
+    }
 }

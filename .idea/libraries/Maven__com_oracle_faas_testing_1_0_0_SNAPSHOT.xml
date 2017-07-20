@@ -1,13 +1,13 @@
 <component name="libraryTable">
   <library name="Maven: com.oracle.faas:testing:1.0.0-SNAPSHOT">
     <CLASSES>
-      <root url="jar://$MAVEN_REPOSITORY$/com/oracle/faas/testing/1.0.0-SNAPSHOT/testing-1.0.0-20170717.162408-27.jar!/" />
+      <root url="jar://$MAVEN_REPOSITORY$/com/oracle/faas/testing/1.0.0-SNAPSHOT/testing-1.0.0-20170719.212638-34.jar!/" />
     </CLASSES>
     <JAVADOC>
-      <root url="jar://$MAVEN_REPOSITORY$/com/oracle/faas/testing/1.0.0-SNAPSHOT/testing-1.0.0-20170717.162408-27-javadoc.jar!/" />
+      <root url="jar://$MAVEN_REPOSITORY$/com/oracle/faas/testing/1.0.0-SNAPSHOT/testing-1.0.0-20170719.212638-34-javadoc.jar!/" />
     </JAVADOC>
     <SOURCES>
-      <root url="jar://$MAVEN_REPOSITORY$/com/oracle/faas/testing/1.0.0-SNAPSHOT/testing-1.0.0-20170717.162408-27-sources.jar!/" />
+      <root url="jar://$MAVEN_REPOSITORY$/com/oracle/faas/testing/1.0.0-SNAPSHOT/testing-1.0.0-20170719.212638-34-sources.jar!/" />
     </SOURCES>
   </library>
 </component>
