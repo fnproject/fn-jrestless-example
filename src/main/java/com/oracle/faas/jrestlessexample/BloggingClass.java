@@ -2,40 +2,44 @@ package com.oracle.faas.jrestlessexample;
 
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.oracle.faas.api.FnConfiguration;
-import com.oracle.faas.api.InputEvent;
 import com.oracle.faas.api.RuntimeContext;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
+import java.sql.Connection;
+import java.sql.DriverManager;
 import java.util.ArrayList;
 import java.util.List;
 
 @Path("/route")
 public class BloggingClass {
-//    @Context
-//    InputEvent inputEvent;
+    private FunctionsDatabase database;
 
-//    private FunctionsDatabase database = setUpDatabase(inputEvent);
     private List<BlogPost> postList = new ArrayList<>();
 
-    public BloggingClass() throws Exception {
+    public BloggingClass(@Context RuntimeContext context){
+        database = setUpDatabase(context);
     }
 
 
-    @Path("/context")
-    @GET
-    public String ping(@Context InputEvent inputEvent){
-//        System.err.println(inputEvent.getConfiguration().get("DB_URL"));
-        return inputEvent.toString();
-    }
+//    @Path("/input")
+//    @GET
+//    public String inputEvent(@Context InputEvent inputEvent){
+//        return inputEvent.getConfiguration().get("DB_URL");
+//    }
+//
+//    @Path("/context")
+//    @GET
+//    public String runtimeContext(@Context RuntimeContext rctx){
+//        return rctx.getConfigurationByKey("DB_URL");
+//    }
 
     @GET
     @Path("/{title}")
     @Produces({MediaType.APPLICATION_JSON})
     public String getPost(@PathParam("title") String title) throws Exception {
-        BlogPost post = getPostByTitle(title);
+        BlogPost post = database.getData(title);
         ObjectMapper map = new ObjectMapper();
 
         return map.writeValueAsString(post);
@@ -46,13 +50,8 @@ public class BloggingClass {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.TEXT_PLAIN)
     public String createPost(BlogPost post) {
-        postList.add(post);
+        database.postData(post);
         return(post.getTitle()) + " added";
-    }
-
-    @FnConfiguration
-    private void setConnection(RuntimeContext ctx) throws Exception{
-
     }
 
     private BlogPost getPostByTitle(String title) {
@@ -66,12 +65,20 @@ public class BloggingClass {
         return notFound;
     }
 
-//    public FunctionsDatabase setUpDatabase(InputEvent inputEvent) throws Exception {
-//        Class.forName("com.mysql.cj.jdbc.Driver");
-//
-//        Connection connection = DriverManager.getConnection(inputEvent.getConfiguration().get("DB_URL"),
-//                inputEvent.getConfiguration().get("DB_USER"), inputEvent.getConfiguration().get("DB_PASSWORD"));
-//
-//        return database = new FunctionsDatabase(connection);
-//    }
+    public FunctionsDatabase setUpDatabase(RuntimeContext context) {
+        try {
+            Class.forName("com.mysql.cj.jdbc.Driver");
+
+        Connection connection = null;
+
+            connection = DriverManager.getConnection(context.getConfigurationByKey("DB_URL").orElseThrow(() -> new RuntimeException("DB_URL not configurable")),
+                    context.getConfigurationByKey("DB_USER").orElseThrow(() -> new RuntimeException("DB_USER not configurable")),
+                    context.getConfigurationByKey("DB_PASSWORD").orElseThrow(() -> new RuntimeException("DB_PASSWORD not configurable")));
+            return database = new FunctionsDatabase(connection);
+
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+
+    }
 }

@@ -16,7 +16,22 @@ public class FunctionTest {
 
     @Ignore
     @Test
-    public void canRetrieveContext(){
+    public void canRetrieveInputEvent(){
+        testing.givenEvent()
+                .withRequestUrl("http://localhost:8080/r/myapp/route/input")
+                .withRoute("/route/input")
+                .withAppName("myapp")
+                .withMethod("GET")
+                .enqueue();
+
+        testing.thenRun(ExampleClass.class, "handleRequest");
+
+        Assert.assertEquals("jdbc:mysql://10.167.103.215/POSTS", testing.getOnlyResult().getBodyAsString());
+    }
+
+    @Ignore
+    @Test
+    public void canRetrieveRuntimeContext(){
         testing.givenEvent()
                 .withRequestUrl("http://localhost:8080/r/myapp/route/context")
                 .withRoute("/route/context")
@@ -29,7 +44,6 @@ public class FunctionTest {
         Assert.assertEquals("jdbc:mysql://10.167.103.215/POSTS", testing.getOnlyResult().getBodyAsString());
     }
 
-    @Ignore
     @Test
     public void shouldReturnText() {
         testing.givenEvent()
@@ -44,7 +58,6 @@ public class FunctionTest {
         Assert.assertEquals("{\"date\":null,\"author\":null,\"title\":\"Title Not Found\",\"body\":null}", testing.getOnlyResult().getBodyAsString());
     }
 
-    @Ignore
     @Test
     public void testPost() {
         testing.givenEvent()
