@@ -1,0 +1,82 @@
+package com.oracle.faas.jrestlessexample;
+
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.Objects;
+
+public class FunctionsDatabase {
+    final private Connection connection;
+
+    public FunctionsDatabase(Connection connection){
+        this.connection = Objects.requireNonNull(connection);
+    }
+
+    public void postData(BlogPost post)  {
+        Objects.requireNonNull(post);
+        BlogPost currentPost = getData(post.getTitle());
+
+        if(currentPost != null){
+            try(PreparedStatement st = connection.prepareStatement("UPDATE Blogpost SET author = ?," +
+                    "date = ?, body = ? WHERE title = ?;")){
+                st.setString(1, post.getAuthor());
+                st.setString(2, post.getDate());
+                st.setString(3, post.getBody());
+                st.setString(4, post.getTitle());
+
+                st.executeUpdate();
+            } catch(SQLException se){
+
+                throw new DataBaseAccessException("error updating database",se);
+            }
+        }else {
+            try(PreparedStatement st = connection.prepareStatement("INSERT INTO Blogpost VALUES (?,?,?,?)")){
+                st.setString(1, post.getTitle());
+                st.setString(2, post.getAuthor());
+                st.setString(3, post.getDate());
+                st.setString(4, post.getBody());
+
+                st.executeUpdate();
+            } catch(SQLException se){
+
+                throw new DataBaseAccessException("error updating database",se);
+            }
+        }
+    }
+
+    public BlogPost getData(String title) {
+        Objects.requireNonNull(title);
+        try(PreparedStatement st = connection.prepareStatement("SELECT * FROM Blogpost WHERE title = ?")){
+            st.setString(1, title);
+            ResultSet rs = st.executeQuery();
+
+            BlogPost post = new BlogPost(title);
+
+            while(rs.next()){
+                String author = rs.getString("author");
+                String date = rs.getString("date");
+                String body = rs.getString("body");
+
+                post.setAuthor(author);
+                post.setBody(body);
+                post.setDate(date);
+            }
+
+            if(post.getBody() == null){
+                return new BlogPost("Title Not Found");
+            }
+            return post;
+
+        }catch(SQLException se){
+
+            throw new DataBaseAccessException("error updating database",se);
+        }
+    }
+
+    public static class DataBaseAccessException extends RuntimeException {
+        public DataBaseAccessException(String msg, Throwable cause){
+            super(msg,cause);
+        }
+    }
+}

@@ -13,10 +13,15 @@ import org.slf4j.LoggerFactory;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.ws.rs.core.Response;
-import java.io.*;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
-import java.util.*;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 
 import static java.util.Objects.requireNonNull;
 
@@ -76,6 +81,8 @@ public abstract class OracleFunctionsRequestHandler extends SimpleRequestHandler
         //TODO: Replace the casting in this function
         @Override
         public void writeResponse(@Nonnull Response.StatusType statusType, @Nonnull Map<String, List<String>> map, @Nonnull OutputStream outputStream) throws IOException {
+//            ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+
             String responseBody = ((ByteArrayOutputStream) outputStream).toString(StandardCharsets.UTF_8.name());
             String contentType = map.getOrDefault("Content-Type", Collections.singletonList(defaultContentType)).get(0);
             response = OutputEvent.fromBytes(responseBody.getBytes(), success, contentType);

@@ -2,20 +2,34 @@ package com.oracle.faas.jrestlessexample;
 
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.oracle.faas.api.FnConfiguration;
+import com.oracle.faas.api.InputEvent;
+import com.oracle.faas.api.RuntimeContext;
 
 import javax.ws.rs.*;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
 @Path("/route")
 public class BloggingClass {
+//    @Context
+//    InputEvent inputEvent;
+
+//    private FunctionsDatabase database = setUpDatabase(inputEvent);
     private List<BlogPost> postList = new ArrayList<>();
 
-    @Path("/pong")
+    public BloggingClass() throws Exception {
+    }
+
+
+    @Path("/context")
     @GET
-    public String ping(){ return "pong"; }
+    public String ping(@Context InputEvent inputEvent){
+//        System.err.println(inputEvent.getConfiguration().get("DB_URL"));
+        return inputEvent.toString();
+    }
 
     @GET
     @Path("/{title}")
@@ -27,26 +41,18 @@ public class BloggingClass {
         return map.writeValueAsString(post);
     }
 
-    @GET
-    @Path("/text")
-    @Produces({MediaType.TEXT_PLAIN})
-    public String tryType(){
-        return "Hello";
-    }
-
-    @POST
-    @Path("/reverse")
-    public String reverse(String str){
-        return "Expects an InputStream";
-    }
-
     @POST
     @Path("/add")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.TEXT_PLAIN)
     public String createPost(BlogPost post) {
         postList.add(post);
-        return post.getTitle();
+        return(post.getTitle()) + " added";
+    }
+
+    @FnConfiguration
+    private void setConnection(RuntimeContext ctx) throws Exception{
+
     }
 
     private BlogPost getPostByTitle(String title) {
@@ -59,4 +65,13 @@ public class BloggingClass {
         }
         return notFound;
     }
+
+//    public FunctionsDatabase setUpDatabase(InputEvent inputEvent) throws Exception {
+//        Class.forName("com.mysql.cj.jdbc.Driver");
+//
+//        Connection connection = DriverManager.getConnection(inputEvent.getConfiguration().get("DB_URL"),
+//                inputEvent.getConfiguration().get("DB_USER"), inputEvent.getConfiguration().get("DB_PASSWORD"));
+//
+//        return database = new FunctionsDatabase(connection);
+//    }
 }
