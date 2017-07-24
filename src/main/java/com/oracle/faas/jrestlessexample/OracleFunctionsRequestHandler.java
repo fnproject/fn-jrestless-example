@@ -5,7 +5,6 @@ import com.jrestless.core.container.handler.SimpleRequestHandler;
 import com.jrestless.core.container.io.DefaultJRestlessContainerRequest;
 import com.jrestless.core.container.io.JRestlessContainerRequest;
 import com.jrestless.core.container.io.RequestAndBaseUri;
-import com.jrestless.core.util.HeaderUtils;
 import com.oracle.faas.api.FnConfiguration;
 import com.oracle.faas.api.InputEvent;
 import com.oracle.faas.api.OutputEvent;
@@ -31,6 +30,7 @@ import java.lang.reflect.Type;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -69,11 +69,21 @@ public abstract class OracleFunctionsRequestHandler extends SimpleRequestHandler
                 requestAndBaseUri,
                 httpMethod,
                 entityStream,
-                HeaderUtils.expandHeaders(inputEvent.getHeaders().getAll()));
-
-        System.err.println(container.toString());
+                this.expandHeaders(inputEvent.getHeaders().getAll()));
 
         return container;
+    }
+
+    public Map<String, List<String>> expandHeaders(Map<String, String> headers) {
+        Map<String, List<String>> theHeaders = new HashMap<>();
+        for (Map.Entry<String, String> e : headers.entrySet()){
+            theHeaders.put(unMangleKey(e.getKey()), Collections.singletonList(e.getValue()));
+        }
+        return theHeaders;
+    }
+
+    private String unMangleKey(String key) {
+        return key.toLowerCase().replace('_', '-');
     }
 
     protected void extendActualJerseyContainerRequest(ContainerRequest actualContainerRequest, JRestlessContainerRequest containerRequest, WrappedInput wrappedInput){
@@ -145,11 +155,8 @@ public abstract class OracleFunctionsRequestHandler extends SimpleRequestHandler
             return new ByteArrayOutputStream();
         }
 
-        //TODO: Replace the casting in this function
         @Override
         public void writeResponse(@Nonnull Response.StatusType statusType, @Nonnull Map<String, List<String>> map, @Nonnull OutputStream outputStream) throws IOException {
-//            ByteArrayOutputStream buffer = new ByteArrayOutputStream();
-
             String responseBody = ((ByteArrayOutputStream) outputStream).toString(StandardCharsets.UTF_8.name());
             String contentType = map.getOrDefault("Content-Type", Collections.singletonList(defaultContentType)).get(0);
             response = OutputEvent.fromBytes(responseBody.getBytes(), success, contentType);
@@ -165,7 +172,6 @@ public abstract class OracleFunctionsRequestHandler extends SimpleRequestHandler
 
     public OutputEvent handleRequest(InputEvent inputEvent){
         return inputEvent.consumeBody((inputStream) -> {
-//            System.err.println(ictx.toString());
             WrappedInput wrappedInput = new WrappedInput(inputEvent, inputStream);
             return this.delegateRequest(wrappedInput);
         });

@@ -3,6 +3,11 @@ package com.oracle.faas.jrestlessexample;
 import com.oracle.faas.testing.FnTesting;
 import org.junit.*;
 
+import java.sql.Connection;
+import java.sql.DriverManager;
+
+import static junit.framework.TestCase.assertNotNull;
+
 public class FunctionTest {
     @Rule
     public final FnTesting testing = FnTesting.createDefault();
@@ -11,41 +16,11 @@ public class FunctionTest {
     public void configure(){
         testing.setConfig("DB_URL", "jdbc:mysql://10.167.103.215/POSTS");
         testing.setConfig("DB_USER", "root");
-        testing.setConfig("DB_PASSWORD", "");
-    }
-
-    @Ignore
-    @Test
-    public void canRetrieveInputEvent(){
-        testing.givenEvent()
-                .withRequestUrl("http://localhost:8080/r/myapp/route/input")
-                .withRoute("/route/input")
-                .withAppName("myapp")
-                .withMethod("GET")
-                .enqueue();
-
-        testing.thenRun(ExampleClass.class, "handleRequest");
-
-        Assert.assertEquals("jdbc:mysql://10.167.103.215/POSTS", testing.getOnlyResult().getBodyAsString());
-    }
-
-    @Ignore
-    @Test
-    public void canRetrieveRuntimeContext(){
-        testing.givenEvent()
-                .withRequestUrl("http://localhost:8080/r/myapp/route/context")
-                .withRoute("/route/context")
-                .withAppName("myapp")
-                .withMethod("GET")
-                .enqueue();
-
-        testing.thenRun(ExampleClass.class, "handleRequest");
-
-        Assert.assertEquals("jdbc:mysql://10.167.103.215/POSTS", testing.getOnlyResult().getBodyAsString());
+        testing.setConfig("DB_PASSWORD", "SgRoV3s");
     }
 
     @Test
-    public void shouldReturnText() {
+    public void shouldReturnUnknown() {
         testing.givenEvent()
                 .withRequestUrl("http://localhost:8080/r/myapp/route/unknownTitle")
                 .withRoute("/route/unknownTitle")
@@ -59,14 +34,28 @@ public class FunctionTest {
     }
 
     @Test
+    public void testIfConnectionNotNull() {
+        Connection connection = null;
+        try {
+            Class.forName("com.mysql.cj.jdbc.Driver");
+
+            connection = DriverManager.getConnection("jdbc:mysql://10.167.103.215/POSTS", "root", "SgRoV3s");
+
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+        assertNotNull(connection);
+    }
+
+    @Test
     public void testPost() {
         testing.givenEvent()
                 .withRequestUrl("http://localhost:8080/r/myapp/route/add")
                 .withBody("{\n" +
-                        "\t\"title\": \"Spamalot\",\n" +
-                        "\t\"date\": \"something\",\n" +
-                        "\t\"author\": \"something\",\n" +
-                        "\t\"body\": \"something\"\n" +
+                        "\t\"title\": \"TestingBlogpost\",\n" +
+                        "\t\"date\": \"24/07/17\",\n" +
+                        "\t\"author\": \"Rae\",\n" +
+                        "\t\"body\": \"Initial test that the database has this post inserted\"\n" +
                         "}")
                 .withAppName("myapp")
                 .withRoute("/route/add")
@@ -76,7 +65,7 @@ public class FunctionTest {
 
         testing.thenRun(ExampleClass.class, "handleRequest");
 
-        Assert.assertEquals("Spamalot added", testing.getOnlyResult().getBodyAsString());
+        Assert.assertEquals("TestingBlogpost added", testing.getOnlyResult().getBodyAsString());
     }
 
     @Ignore

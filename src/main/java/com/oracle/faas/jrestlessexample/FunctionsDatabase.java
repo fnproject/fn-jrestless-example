@@ -17,7 +17,7 @@ public class FunctionsDatabase {
         Objects.requireNonNull(post);
         BlogPost currentPost = getData(post.getTitle());
 
-        if(currentPost != null){
+        if(currentPost.getBody() != null){
             try(PreparedStatement st = connection.prepareStatement("UPDATE Blogpost SET author = ?," +
                     "date = ?, body = ? WHERE title = ?;")){
                 st.setString(1, post.getAuthor());
@@ -27,7 +27,7 @@ public class FunctionsDatabase {
 
                 st.executeUpdate();
             } catch(SQLException se){
-
+                se.printStackTrace();
                 throw new DataBaseAccessException("error updating database",se);
             }
         }else {
@@ -39,7 +39,7 @@ public class FunctionsDatabase {
 
                 st.executeUpdate();
             } catch(SQLException se){
-
+                se.printStackTrace();
                 throw new DataBaseAccessException("error updating database",se);
             }
         }
@@ -77,6 +77,7 @@ public class FunctionsDatabase {
     public static class DataBaseAccessException extends RuntimeException {
         public DataBaseAccessException(String msg, Throwable cause){
             super(msg,cause);
+            System.err.println("DatabaseAccessException");
         }
     }
 }
