@@ -19,6 +19,7 @@ public class FunctionTest {
         testing.setConfig("DB_PASSWORD", "SgRoV3s");
     }
 
+    @Ignore
     @Test
     public void shouldReturnUnknown() {
         testing.givenEvent()
@@ -26,6 +27,22 @@ public class FunctionTest {
                 .withRoute("/route/unknownTitle")
                 .withAppName("myapp")
                 .withMethod("GET")
+                .enqueue();
+
+        testing.thenRun(ExampleClass.class, "handleRequest");
+
+        Assert.assertEquals("{\"date\":null,\"author\":null,\"title\":\"Title Not Found\",\"body\":null}", testing.getOnlyResult().getBodyAsString());
+    }
+
+    //TODO: Mention that '.withQueryParameter' is doing odd things
+    @Test
+    public void queryParamTest() {
+        testing.givenEvent()
+                .withRequestUrl("http://localhost:8080/r/myapp/route/?title=unknown")
+                .withRoute("/route/")
+                .withAppName("myapp")
+                .withMethod("GET")
+//                .withQueryParameter("title", "unknown")
                 .enqueue();
 
         testing.thenRun(ExampleClass.class, "handleRequest");

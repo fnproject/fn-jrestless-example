@@ -18,9 +18,9 @@ public class BloggingClass {
     }
 
     @GET
-    @Path("/{title}")
+    @Path("/")
     @Produces({MediaType.APPLICATION_JSON})
-    public BlogPost getPost(@PathParam("title") String title) throws Exception {
+    public BlogPost getPost(@QueryParam("title") String title) {
         BlogPost post = database.getData(title);
         return post;
     }
@@ -29,7 +29,7 @@ public class BloggingClass {
     @Path("/add")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.TEXT_PLAIN)
-    public String createPost(BlogPost post) throws Exception {
+    public String createPost(BlogPost post) {
         database.postData(post);
         return (post.getTitle()) + " added";
     }

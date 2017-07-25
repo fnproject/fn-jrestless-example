@@ -5,15 +5,13 @@ import com.jrestless.core.container.handler.SimpleRequestHandler;
 import com.jrestless.core.container.io.DefaultJRestlessContainerRequest;
 import com.jrestless.core.container.io.JRestlessContainerRequest;
 import com.jrestless.core.container.io.RequestAndBaseUri;
-import com.oracle.faas.api.FnConfiguration;
-import com.oracle.faas.api.InputEvent;
-import com.oracle.faas.api.OutputEvent;
-import com.oracle.faas.api.RuntimeContext;
+import com.oracle.faas.api.*;
 import org.glassfish.hk2.api.TypeLiteral;
 import org.glassfish.hk2.utilities.Binder;
 import org.glassfish.jersey.internal.inject.ReferencingFactory;
 import org.glassfish.jersey.internal.util.collection.Ref;
 import org.glassfish.jersey.server.ContainerRequest;
+import org.glassfish.jersey.server.Uri;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -22,10 +20,8 @@ import javax.annotation.Nullable;
 import javax.inject.Inject;
 import javax.inject.Provider;
 import javax.ws.rs.core.Response;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
+import javax.ws.rs.core.UriBuilder;
+import java.io.*;
 import java.lang.reflect.Type;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
@@ -49,7 +45,7 @@ public abstract class OracleFunctionsRequestHandler extends SimpleRequestHandler
 
     }
 
-
+    @Override
     protected JRestlessContainerRequest createContainerRequest(WrappedInput wrappedInput) {
         InputEvent inputEvent = wrappedInput.inputEvent;
         InputStream entityStream = wrappedInput.stream;
@@ -61,9 +57,12 @@ public abstract class OracleFunctionsRequestHandler extends SimpleRequestHandler
         URI baseUri = URI.create("/");
         URI requestUri = URI.create(path);
 
-        RequestAndBaseUri requestAndBaseUri = new RequestAndBaseUri(baseUri, requestUri);
+        UriBuilder reqUriBuilder = UriBuilder.fromUri(baseUri).path(path);
+        addQueryParametersIfAvailable(reqUriBuilder, inputEvent);
 
         String httpMethod = inputEvent.getMethod();
+
+        RequestAndBaseUri requestAndBaseUri = new RequestAndBaseUri(baseUri, reqUriBuilder.build());
 
         DefaultJRestlessContainerRequest container = new DefaultJRestlessContainerRequest(
                 requestAndBaseUri,
@@ -74,7 +73,19 @@ public abstract class OracleFunctionsRequestHandler extends SimpleRequestHandler
         return container;
     }
 
-    public Map<String, List<String>> expandHeaders(Map<String, String> headers) {
+    //TODO: Fix this so that it can take multiple queryparameter values
+    private static void addQueryParametersIfAvailable(UriBuilder uriBuilder, InputEvent inputEvent) {
+        QueryParameters params = inputEvent.getQueryParameters();
+        Map<String, List<String>> queryStrings = params.getAll();
+        if(queryStrings != null) {
+            for (Map.Entry<String, List<String>> queryStringEntry : queryStrings.entrySet()) {
+                String key = queryStringEntry.getKey();
+                uriBuilder.queryParam(key, (params.getValues(key)).get(0));
+            }
+        }
+    }
+
+    private Map<String, List<String>> expandHeaders(Map<String, String> headers) {
         Map<String, List<String>> theHeaders = new HashMap<>();
         for (Map.Entry<String, String> e : headers.entrySet()){
             theHeaders.put(unMangleKey(e.getKey()), Collections.singletonList(e.getValue()));
@@ -86,6 +97,7 @@ public abstract class OracleFunctionsRequestHandler extends SimpleRequestHandler
         return key.toLowerCase().replace('_', '-');
     }
 
+    @Override
     protected void extendActualJerseyContainerRequest(ContainerRequest actualContainerRequest, JRestlessContainerRequest containerRequest, WrappedInput wrappedInput){
         InputEvent event = wrappedInput.inputEvent;
         actualContainerRequest.setRequestScopedInitializer(locator -> {
@@ -110,7 +122,8 @@ public abstract class OracleFunctionsRequestHandler extends SimpleRequestHandler
         //TODO: Add "actualContainerRequest.setProperty(..." etc?
     }
 
-@Override protected final Binder createBinder() { return new InputBinder(); }
+    @Override
+    protected final Binder createBinder() { return new InputBinder(); }
 
     private static class InputBinder extends AbstractReferencingBinder {
 
@@ -163,6 +176,7 @@ public abstract class OracleFunctionsRequestHandler extends SimpleRequestHandler
         }
     }
 
+    @Override
     protected OutputEvent onRequestFailure(Exception e, WrappedInput wrappedInput, @Nullable JRestlessContainerRequest jRestlessContainerRequest) {
         LOG.error("request failed", e);
         System.err.println("request failed" + e.getMessage());
