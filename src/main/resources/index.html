@@ -1,0 +1,43 @@
+<html>
+<title>
+    Changed
+</title>
+<body>
+<input id="titletext" placeholder="title"/>
+<textarea id="body" placeholder="content"></textarea>
+<input id="addbutton" type="button" value="Add"/>
+</body>
+<script>
+    httpRequest = new XMLHttpRequest();
+    httpRequest.onreadystatechange = function(){
+        if(httpRequest.readyState === XMLHttpRequest.DONE) {
+           console.log(httpRequest.responseText);
+        }
+    };
+    httpRequest.open('GET', 'blogs', true);
+    httpRequest.send();
+
+    var addPost = function(){
+        var titleText = document.getElementById("titletext").value;
+        var body = document.getElementById("body").value;
+        console.log(titleText, body);
+
+//        {"date":"24/07/17","author":"Rae","title":"TestingBlogpost","body":"Initial test that the database has this post inserted"}
+
+        var thePost = {"date": "whenever",
+                       "author": "Rae",
+                       "title": titleText,
+                       "body": body};
+
+         console.log(JSON.stringify(thePost));
+         post = new XMLHttpRequest();
+         post.open('POST', 'add', true);
+         post.setRequestHeader("Content-Type", "application/json");
+         post.send(JSON.stringify(thePost));
+
+    }
+
+    document.getElementById("addbutton").onclick = addPost;
+
+</script>
+</html>

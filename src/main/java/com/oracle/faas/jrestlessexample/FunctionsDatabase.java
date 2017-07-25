@@ -4,6 +4,8 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 
 public class FunctionsDatabase {
@@ -36,12 +38,42 @@ public class FunctionsDatabase {
                 st.setString(2, post.getAuthor());
                 st.setString(3, post.getDate());
                 st.setString(4, post.getBody());
+                System.err.println("CREATE NEW POST");
 
                 st.executeUpdate();
             } catch(SQLException se){
                 se.printStackTrace();
                 throw new DataBaseAccessException("error updating database",se);
             }
+        }
+    }
+
+    public List<BlogPost> getAllPosts() {
+        try(PreparedStatement st = connection.prepareStatement("SELECT * FROM Blogpost")){
+            ResultSet rs = st.executeQuery();
+
+            List<BlogPost> allPosts = new ArrayList<>();
+            while(rs.next()){
+                String author = rs.getString("author");
+                String date = rs.getString("date");
+                String body = rs.getString("body");
+                String title = rs.getString("title");
+
+                BlogPost post = new BlogPost();
+
+                post.setAuthor(author);
+                post.setBody(body);
+                post.setDate(date);
+                post.setTitle(title);
+
+                allPosts.add(post);
+            }
+
+            return allPosts;
+
+        }catch(SQLException se){
+
+            throw new DataBaseAccessException("error updating database",se);
         }
     }
 

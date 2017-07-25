@@ -12,9 +12,14 @@ public class FunctionTest {
     @Rule
     public final FnTesting testing = FnTesting.createDefault();
 
+
+    //Comment: 0.0.0.0 as test harness means it's being run on a jvm
+    // 0.0.0.0 is "this host". Traffic to the mysql port is tunneled to
+    // the docker mysql instance for us.
+    // IF RUNNING INSIDE DOCKER: the address we'd want to use instead is 172.17.0.1 (port 3306)
     @Before
     public void configure(){
-        testing.setConfig("DB_URL", "jdbc:mysql://10.167.103.215/POSTS");
+        testing.setConfig("DB_URL", "jdbc:mysql://172.17.0.1/POSTS");
         testing.setConfig("DB_USER", "root");
         testing.setConfig("DB_PASSWORD", "SgRoV3s");
     }
@@ -38,11 +43,11 @@ public class FunctionTest {
     @Test
     public void queryParamTest() {
         testing.givenEvent()
-                .withRequestUrl("http://localhost:8080/r/myapp/route/?title=unknown")
+                .withRequestUrl("http://localhost:8080/r/myapp/route/")
                 .withRoute("/route/")
                 .withAppName("myapp")
                 .withMethod("GET")
-//                .withQueryParameter("title", "unknown")
+                .withQueryParameter("title", "unknown")
                 .enqueue();
 
         testing.thenRun(ExampleClass.class, "handleRequest");
@@ -50,13 +55,14 @@ public class FunctionTest {
         Assert.assertEquals("{\"date\":null,\"author\":null,\"title\":\"Title Not Found\",\"body\":null}", testing.getOnlyResult().getBodyAsString());
     }
 
+
     @Test
     public void testIfConnectionNotNull() {
         Connection connection = null;
         try {
             Class.forName("com.mysql.cj.jdbc.Driver");
 
-            connection = DriverManager.getConnection("jdbc:mysql://10.167.103.215/POSTS", "root", "SgRoV3s");
+            connection = DriverManager.getConnection("jdbc:mysql://172.17.0.1/POSTS", "root", "SgRoV3s");
 
         } catch (Exception e) {
             throw new RuntimeException(e);
@@ -70,8 +76,8 @@ public class FunctionTest {
                 .withRequestUrl("http://localhost:8080/r/myapp/route/add")
                 .withBody("{\n" +
                         "\t\"title\": \"TestingBlogpost\",\n" +
-                        "\t\"date\": \"24/07/17\",\n" +
                         "\t\"author\": \"Rae\",\n" +
+                        "\t\"date\": \"24/07/17\",\n" +
                         "\t\"body\": \"Initial test that the database has this post inserted\"\n" +
                         "}")
                 .withAppName("myapp")

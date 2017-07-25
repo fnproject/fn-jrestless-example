@@ -5,13 +5,15 @@ import com.jrestless.core.container.handler.SimpleRequestHandler;
 import com.jrestless.core.container.io.DefaultJRestlessContainerRequest;
 import com.jrestless.core.container.io.JRestlessContainerRequest;
 import com.jrestless.core.container.io.RequestAndBaseUri;
-import com.oracle.faas.api.*;
+import com.oracle.faas.api.FnConfiguration;
+import com.oracle.faas.api.InputEvent;
+import com.oracle.faas.api.OutputEvent;
+import com.oracle.faas.api.RuntimeContext;
 import org.glassfish.hk2.api.TypeLiteral;
 import org.glassfish.hk2.utilities.Binder;
 import org.glassfish.jersey.internal.inject.ReferencingFactory;
 import org.glassfish.jersey.internal.util.collection.Ref;
 import org.glassfish.jersey.server.ContainerRequest;
-import org.glassfish.jersey.server.Uri;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -21,7 +23,10 @@ import javax.inject.Inject;
 import javax.inject.Provider;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
-import java.io.*;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.lang.reflect.Type;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
@@ -73,14 +78,11 @@ public abstract class OracleFunctionsRequestHandler extends SimpleRequestHandler
         return container;
     }
 
-    //TODO: Fix this so that it can take multiple queryparameter values
     private static void addQueryParametersIfAvailable(UriBuilder uriBuilder, InputEvent inputEvent) {
-        QueryParameters params = inputEvent.getQueryParameters();
-        Map<String, List<String>> queryStrings = params.getAll();
-        if(queryStrings != null) {
-            for (Map.Entry<String, List<String>> queryStringEntry : queryStrings.entrySet()) {
-                String key = queryStringEntry.getKey();
-                uriBuilder.queryParam(key, (params.getValues(key)).get(0));
+        Map<String, List<String>> queryStrings = inputEvent.getQueryParameters().getAll();
+        for (Map.Entry<String, List<String>> queryStringEntry : queryStrings.entrySet()) {
+            for (String value : queryStringEntry.getValue()){
+                uriBuilder.queryParam(queryStringEntry.getKey(), value);
             }
         }
     }

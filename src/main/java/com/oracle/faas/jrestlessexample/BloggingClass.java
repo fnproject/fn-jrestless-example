@@ -6,8 +6,10 @@ import com.oracle.faas.api.RuntimeContext;
 import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
+import java.io.InputStream;
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.util.List;
 
 @Path("/route")
 public class BloggingClass {
@@ -15,6 +17,20 @@ public class BloggingClass {
 
     public BloggingClass(@Context RuntimeContext context){
         database = setUpDatabase(context);
+    }
+
+    @GET
+    @Path("/blogs")
+    @Produces({MediaType.APPLICATION_JSON})
+    public List<BlogPost> getAllPosts() {
+        return database.getAllPosts();
+    }
+
+    @GET
+    @Path("/html")
+    @Produces({MediaType.TEXT_HTML})
+    public InputStream getWebPage() {
+        return this.getClass().getResourceAsStream("/index.html");
     }
 
     @GET
