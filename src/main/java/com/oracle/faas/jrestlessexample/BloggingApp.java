@@ -1,15 +1,13 @@
 package com.oracle.faas.jrestlessexample;
 
-import org.glassfish.jersey.logging.LoggingFeature;
 import org.glassfish.jersey.server.ResourceConfig;
 
-public class ExampleClass extends OracleFunctionsRequestHandler {
+public class BloggingApp extends OracleFunctionsRequestHandler {
 
-    public ExampleClass() {
+    public BloggingApp() {
 
         ResourceConfig config = new ResourceConfig();
         config.packages("com.oracle.faas.jrestlessexample");
-        config.register(LoggingFeature.class);
 
         init(config);
 

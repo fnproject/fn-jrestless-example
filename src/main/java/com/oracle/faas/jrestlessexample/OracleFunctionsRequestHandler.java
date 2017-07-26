@@ -152,6 +152,7 @@ public abstract class OracleFunctionsRequestHandler extends SimpleRequestHandler
         }
     }
 
+    @Override
     protected SimpleResponseWriter<OutputEvent> createResponseWriter(@Nonnull WrappedInput wrappedInput) {
         return new ResponseWriter();
     }
