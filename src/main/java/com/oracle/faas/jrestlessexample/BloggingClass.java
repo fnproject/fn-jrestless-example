@@ -33,14 +33,6 @@ public class BloggingClass {
         return this.getClass().getResourceAsStream("/index.html");
     }
 
-    @GET
-    @Path("/")
-    @Produces({MediaType.APPLICATION_JSON})
-    public BlogPost getPost(@QueryParam("title") String title) {
-        BlogPost post = database.getData(title);
-        return post;
-    }
-
     @POST
     @Path("/add")
     @Consumes(MediaType.APPLICATION_JSON)

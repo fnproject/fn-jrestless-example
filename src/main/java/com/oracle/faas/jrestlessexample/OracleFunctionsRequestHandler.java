@@ -60,7 +60,6 @@ public abstract class OracleFunctionsRequestHandler extends SimpleRequestHandler
         String path = inputEvent.getRoute();
 
         URI baseUri = URI.create("/");
-        URI requestUri = URI.create(path);
 
         UriBuilder reqUriBuilder = UriBuilder.fromUri(baseUri).path(path);
         addQueryParametersIfAvailable(reqUriBuilder, inputEvent);

@@ -35,8 +35,8 @@ public class FunctionsDatabase {
         }else {
             try(PreparedStatement st = connection.prepareStatement("INSERT INTO Blogpost VALUES (?,?,?,?)")){
                 st.setString(1, post.getTitle());
-                st.setString(2, post.getAuthor());
-                st.setString(3, post.getDate());
+                st.setString(2, post.getDate());
+                st.setString(3, post.getAuthor());
                 st.setString(4, post.getBody());
                 System.err.println("CREATE NEW POST");
 
