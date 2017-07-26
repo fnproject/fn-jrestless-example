@@ -4,4 +4,4 @@ runtime: java
 cmd: com.oracle.faas.jrestlessexample.BloggingApp::handleRequest
 path: /route/add
 format: http
-timeout: 10
+timeout: 1200

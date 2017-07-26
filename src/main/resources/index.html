@@ -57,27 +57,38 @@
         color: #354E61;
     }
 
+    #posts-go-in-here > div > h4:after {
+        content:' ';
+        display:block;
+        border:1px solid #d3d3d3;
+        margin-top:10Px;
+    }
+
     #container {
         display: grid;
         grid-gap: 5px;
         position: absolute;
-        right: 20%;
+        right: 10%;
         padding-top: 30px;
     }
 
     #container > #titletext {
-        width: 300px;
+        width: 400px;
         background-color: #f1f1f1;
     }
 
     #container > #body {
-        height: 100px;
+        height: 200px;
         background-color: #f1f1f1;
     }
 
     #container > #addbutton {
         background-color:#d3d3d3;
         border:#354E61
+    }
+
+    input, textarea, select, button {
+        font: 15px system-ui;
     }
 
     .post { color: white; height: 0; }
