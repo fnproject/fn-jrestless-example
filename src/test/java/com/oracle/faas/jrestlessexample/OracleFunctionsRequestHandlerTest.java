@@ -2,6 +2,7 @@ package com.oracle.faas.jrestlessexample;
 
 import com.jrestless.core.container.JRestlessHandlerContainer;
 import com.jrestless.core.container.io.JRestlessContainerRequest;
+import com.jrestless.core.container.io.RequestAndBaseUri;
 import com.oracle.faas.api.Headers;
 import com.oracle.faas.api.InputEvent;
 import com.oracle.faas.runtime.HeadersImpl;
@@ -23,55 +24,53 @@ import static org.mockito.Mockito.mock;
 public class OracleFunctionsRequestHandlerTest {
     private JRestlessHandlerContainer<JRestlessContainerRequest> container;
     private OracleFunctionsRequestHandler requestHandler;
+    private ByteArrayInputStream defaultBody;
 
     @Before
     public void setUp() {
         container = mock(JRestlessHandlerContainer.class);
         requestHandler = new DefaultOracleFunctionsRequestHandler(container);
-
+        defaultBody = new ByteArrayInputStream(new byte[]{});
     }
 
     @Test
-    public void inputEventHttpMethodIsSetInContainer() {
-        ByteArrayInputStream body = new ByteArrayInputStream(new byte[]{});
+    public void createContainerRequest_HttpMethodGiven_ShouldGetHttpMethod() {
         InputEvent inputEvent = new ReadOnceInputEvent("myApp",
                 "/route",
                 "www.example.com/path",
                 "GET",
-                body,
+                defaultBody,
                 new HeadersImpl(new HashMap<>()),
                 new QueryParametersImpl());
-        OracleFunctionsRequestHandler.WrappedInput wrappedInput = new OracleFunctionsRequestHandler.WrappedInput(inputEvent, body);
+        OracleFunctionsRequestHandler.WrappedInput wrappedInput = new OracleFunctionsRequestHandler.WrappedInput(inputEvent, defaultBody);
         JRestlessContainerRequest containerRequest = requestHandler.createContainerRequest(wrappedInput);
         assertEquals("GET", containerRequest.getHttpMethod());
     }
 
     @Test(expected = NullPointerException.class)
     public void createContainerRequest_NoHttpMethodGiven_ShouldThrowNpe() {
-        ByteArrayInputStream body = new ByteArrayInputStream(new byte[]{});
         InputEvent inputEvent = new ReadOnceInputEvent("myApp",
                 "/route",
                 "www.example.com/path",
                 null,
-                body,
+                defaultBody,
                 new HeadersImpl(new HashMap<>()),
                 new QueryParametersImpl());
-        OracleFunctionsRequestHandler.WrappedInput wrappedInput = new OracleFunctionsRequestHandler.WrappedInput(inputEvent, body);
+        OracleFunctionsRequestHandler.WrappedInput wrappedInput = new OracleFunctionsRequestHandler.WrappedInput(inputEvent, defaultBody);
         requestHandler.createContainerRequest(wrappedInput);
     }
 
     @Test
     public void createContainerRequest_HeadersGiven_ShouldUseHeaders() {
         Headers headers = new HeadersImpl(ImmutableMap.of("key_one", "value_one", "key_two", "value_two"));
-        ByteArrayInputStream body = new ByteArrayInputStream(new byte[]{});
         InputEvent inputEvent = new ReadOnceInputEvent("myApp",
                 "/route",
                 "www.example.com/path",
                 "GET",
-                body,
+                defaultBody,
                 headers,
                 new QueryParametersImpl());
-        OracleFunctionsRequestHandler.WrappedInput wrappedInput = new OracleFunctionsRequestHandler.WrappedInput(inputEvent, body);
+        OracleFunctionsRequestHandler.WrappedInput wrappedInput = new OracleFunctionsRequestHandler.WrappedInput(inputEvent, defaultBody);
         JRestlessContainerRequest containerRequest = requestHandler.createContainerRequest(wrappedInput);
         assertEquals(ImmutableMap.of(unMangleKey("key_one"), singletonList("value_one"), unMangleKey("key_two"), singletonList("value_two")), containerRequest.getHeaders());
     }
@@ -82,15 +81,14 @@ public class OracleFunctionsRequestHandlerTest {
         headersMap.put(null, "value-one");
         headersMap.put("key-two", "value_two");
         Headers headers = new HeadersImpl(headersMap);
-        ByteArrayInputStream body = new ByteArrayInputStream(new byte[]{});
         InputEvent inputEvent = new ReadOnceInputEvent("myApp",
                 "/route",
                 "www.example.com/path",
                 "GET",
-                body,
+                defaultBody,
                 headers,
                 new QueryParametersImpl());
-        OracleFunctionsRequestHandler.WrappedInput wrappedInput = new OracleFunctionsRequestHandler.WrappedInput(inputEvent, body);
+        OracleFunctionsRequestHandler.WrappedInput wrappedInput = new OracleFunctionsRequestHandler.WrappedInput(inputEvent, defaultBody);
         JRestlessContainerRequest containerRequest = requestHandler.createContainerRequest(wrappedInput);
         assertEquals(ImmutableMap.of("key-two", singletonList("value_two")), containerRequest.getHeaders());
     }
@@ -101,108 +99,20 @@ public class OracleFunctionsRequestHandlerTest {
         headersMap.put("key-one", null);
         headersMap.put("key-two", "value_two");
         Headers headers = new HeadersImpl(headersMap);
-        ByteArrayInputStream body = new ByteArrayInputStream(new byte[]{});
         InputEvent inputEvent = new ReadOnceInputEvent("myApp",
                 "/route",
                 "www.example.com/path",
                 "GET",
-                body,
+                defaultBody,
                 headers,
                 new QueryParametersImpl());
-        OracleFunctionsRequestHandler.WrappedInput wrappedInput = new OracleFunctionsRequestHandler.WrappedInput(inputEvent, body);
+        OracleFunctionsRequestHandler.WrappedInput wrappedInput = new OracleFunctionsRequestHandler.WrappedInput(inputEvent, defaultBody);
         JRestlessContainerRequest containerRequest = requestHandler.createContainerRequest(wrappedInput);
         assertEquals(ImmutableMap.of(unMangleKey("key_two"), singletonList("value_two")), containerRequest.getHeaders());
     }
 
-    //TODO: test baseUri when Host is passed in as a header
     @Test
-    public void inputEventBaseUriIsSetInContainer() {
-        URI baseUri = URI.create("/");
-        ByteArrayInputStream body = new ByteArrayInputStream(new byte[]{});
-        InputEvent inputEvent = new ReadOnceInputEvent("myApp",
-                "/route",
-                "www.example.com/path",
-                "GET",
-                body,
-                new HeadersImpl(new HashMap<>()),
-                new QueryParametersImpl());
-        OracleFunctionsRequestHandler.WrappedInput wrappedInput = new OracleFunctionsRequestHandler.WrappedInput(inputEvent, body);
-        JRestlessContainerRequest containerRequest = requestHandler.createContainerRequest(wrappedInput);
-        assertEquals(baseUri, containerRequest.getBaseUri());
-    }
-
-    @Test
-    public void inputEventRouteSetInContainerAsRequestUri() {
-        ByteArrayInputStream body = new ByteArrayInputStream(new byte[]{});
-        InputEvent inputEvent = new ReadOnceInputEvent("myApp",
-                "/route",
-                "www.example.com/path",
-                "GET",
-                body,
-                new HeadersImpl(new HashMap<>()),
-                new QueryParametersImpl());
-        OracleFunctionsRequestHandler.WrappedInput wrappedInput = new OracleFunctionsRequestHandler.WrappedInput(inputEvent, body);
-        JRestlessContainerRequest containerRequest = requestHandler.createContainerRequest(wrappedInput);
-        URI requestUri = URI.create(inputEvent.getRoute());
-        assertEquals(requestUri, containerRequest.getRequestUri());
-    }
-
-    @Test
-    public void createContainerRequest_OneQueryParamGiven_ShouldUseQueryParamInRequestUri() {
-        ByteArrayInputStream body = new ByteArrayInputStream(new byte[]{});
-        Map<String, List<String>> params = ImmutableMap.of("query", Collections.singletonList("params"));
-        InputEvent inputEvent = new ReadOnceInputEvent("myApp",
-                "/route",
-                "www.example.com/path",
-                "GET",
-                body,
-                new HeadersImpl(new HashMap<>()),
-                new QueryParametersImpl(params));
-        OracleFunctionsRequestHandler.WrappedInput wrappedInput = new OracleFunctionsRequestHandler.WrappedInput(inputEvent, body);
-        JRestlessContainerRequest containerRequest = requestHandler.createContainerRequest(wrappedInput);
-        URI reqUri = URI.create("/route?query=params");
-        assertEquals(reqUri, containerRequest.getRequestUri());
-    }
-
-    @Test
-    public void createContainerRequest_MultipleQueryParamsGiven_ShouldUseQueryParamInRequestUri() {
-        ByteArrayInputStream body = new ByteArrayInputStream(new byte[]{});
-        Map<String, List<String>> query = ImmutableMap.of("query1", Collections.singletonList("param1"), "query2", Collections.singletonList("param2"));
-        InputEvent inputEvent = new ReadOnceInputEvent("myApp",
-                "/route",
-                "www.example.com/path",
-                "GET",
-                body,
-                new HeadersImpl(new HashMap<>()),
-                new QueryParametersImpl(query));
-        OracleFunctionsRequestHandler.WrappedInput wrappedInput = new OracleFunctionsRequestHandler.WrappedInput(inputEvent, body);
-        JRestlessContainerRequest containerRequest = requestHandler.createContainerRequest(wrappedInput);
-        URI reqUri = URI.create("/route?query1=param1&query2=param2");
-        assertEquals(reqUri, containerRequest.getRequestUri());
-    }
-
-    @Test
-    public void createContainerRequest_OneQueryParamWithMultipleValues_ShouldDuplicateQueryParamInRequestUri() {
-        ByteArrayInputStream body = new ByteArrayInputStream(new byte[]{});
-        List<String> params = new ArrayList<>();
-        params.add("param1");
-        params.add("param2");
-        Map<String, List<String>> query = ImmutableMap.of("query", params);
-        InputEvent inputEvent = new ReadOnceInputEvent("myApp",
-                "/route",
-                "www.example.com/path",
-                "GET",
-                body,
-                new HeadersImpl(new HashMap<>()),
-                new QueryParametersImpl(query));
-        OracleFunctionsRequestHandler.WrappedInput wrappedInput = new OracleFunctionsRequestHandler.WrappedInput(inputEvent, body);
-        JRestlessContainerRequest containerRequest = requestHandler.createContainerRequest(wrappedInput);
-        URI reqUri = URI.create("/route?query=param1&query=param2");
-        assertEquals(reqUri, containerRequest.getRequestUri());
-    }
-
-    @Test
-    public void inputEventEntityStreamWithBodyIsSetInContainer() {
+    public void createContainerRequest_BodyGiven_ShouldUseBody() {
         String content = "42";
         ByteArrayInputStream body = new ByteArrayInputStream(content.getBytes());
         InputEvent inputEvent = new ReadOnceInputEvent("myApp",
@@ -219,20 +129,98 @@ public class OracleFunctionsRequestHandlerTest {
     }
 
     @Test
-    public void inputEventEntityStreamWithNoBodyIsSetInContainer() {
-        ByteArrayInputStream body = new ByteArrayInputStream(new byte[]{});
+    public void createContainerRequest_NoBodyGiven_ShouldUseEmptyBais() {
         InputEvent inputEvent = new ReadOnceInputEvent("myApp",
                 "/route",
                 "www.example.com/path",
                 "GET",
-                body,
+                defaultBody,
                 new HeadersImpl(new HashMap<>()),
                 new QueryParametersImpl());
-        OracleFunctionsRequestHandler.WrappedInput wrappedInput = new OracleFunctionsRequestHandler.WrappedInput(inputEvent, body);
+        OracleFunctionsRequestHandler.WrappedInput wrappedInput = new OracleFunctionsRequestHandler.WrappedInput(inputEvent, defaultBody);
         JRestlessContainerRequest containerRequest = requestHandler.createContainerRequest(wrappedInput);
         assertEquals(ByteArrayInputStream.class, (containerRequest.getEntityStream()).getClass());
         assertEquals("", toString((ByteArrayInputStream) (containerRequest.getEntityStream())));
     }
+
+    //TODO: test baseUri when Host is passed in as a header
+    @Test
+    public void getRequestAndBaseUri_FallbackBaseUriUsed_ShouldMakeBasePath() {
+        URI baseUri = URI.create("/");
+        InputEvent inputEvent = new ReadOnceInputEvent("myApp",
+                "/route",
+                "www.example.com/path",
+                "GET",
+                defaultBody,
+                new HeadersImpl(new HashMap<>()),
+                new QueryParametersImpl());
+        RequestAndBaseUri requestAndBaseUri = requestHandler.getRequestAndBaseUri(inputEvent);
+        assertEquals(baseUri, requestAndBaseUri.getBaseUri());
+    }
+
+    @Test
+    public void getRequestAndBaseUri_RouteSetAsRequest_ShouldMakeRouteRequestUri() {
+        InputEvent inputEvent = new ReadOnceInputEvent("myApp",
+                "/route",
+                "www.example.com/path",
+                "GET",
+                defaultBody,
+                new HeadersImpl(new HashMap<>()),
+                new QueryParametersImpl());
+        RequestAndBaseUri requestAndBaseUri = requestHandler.getRequestAndBaseUri(inputEvent);
+        URI requestUri = URI.create(inputEvent.getRoute());
+        assertEquals(requestUri, requestAndBaseUri.getRequestUri());
+    }
+
+    @Test
+    public void getRequestAndBaseUri_OneQueryParamGiven_ShouldUseQueryParamInRequestUri() {
+        Map<String, List<String>> params = ImmutableMap.of("query", Collections.singletonList("params"));
+        InputEvent inputEvent = new ReadOnceInputEvent("myApp",
+                "/route",
+                "www.example.com/path",
+                "GET",
+                defaultBody,
+                new HeadersImpl(new HashMap<>()),
+                new QueryParametersImpl(params));
+        RequestAndBaseUri requestAndBaseUri = requestHandler.getRequestAndBaseUri(inputEvent);
+        URI reqUri = URI.create("/route?query=params");
+        assertEquals(reqUri, requestAndBaseUri.getRequestUri());
+    }
+
+    @Test
+    public void getRequestAndBaseUri_MultipleQueryParamsGiven_ShouldUseQueryParamInRequestUri() {
+        Map<String, List<String>> query = ImmutableMap.of("query1", Collections.singletonList("param1"), "query2", Collections.singletonList("param2"));
+        InputEvent inputEvent = new ReadOnceInputEvent("myApp",
+                "/route",
+                "www.example.com/path",
+                "GET",
+                defaultBody,
+                new HeadersImpl(new HashMap<>()),
+                new QueryParametersImpl(query));
+        RequestAndBaseUri requestAndBaseUri = requestHandler.getRequestAndBaseUri(inputEvent);
+        URI reqUri = URI.create("/route?query1=param1&query2=param2");
+        assertEquals(reqUri, requestAndBaseUri.getRequestUri());
+    }
+
+    @Test
+    public void getRequestAndBaseUri_OneQueryParamWithMultipleValues_ShouldDuplicateQueryParamInRequestUri() {
+        List<String> params = new ArrayList<>();
+        params.add("param1");
+        params.add("param2");
+        Map<String, List<String>> query = ImmutableMap.of("query", params);
+        InputEvent inputEvent = new ReadOnceInputEvent("myApp",
+                "/route",
+                "www.example.com/path",
+                "GET",
+                defaultBody,
+                new HeadersImpl(new HashMap<>()),
+                new QueryParametersImpl(query));
+        RequestAndBaseUri requestAndBaseUri = requestHandler.getRequestAndBaseUri(inputEvent);
+        URI reqUri = URI.create("/route?query=param1&query=param2");
+        assertEquals(reqUri, requestAndBaseUri.getRequestUri());
+    }
+
+
 
     private static class DefaultOracleFunctionsRequestHandler extends OracleFunctionsRequestHandler{
         DefaultOracleFunctionsRequestHandler(JRestlessHandlerContainer<JRestlessContainerRequest> container){
