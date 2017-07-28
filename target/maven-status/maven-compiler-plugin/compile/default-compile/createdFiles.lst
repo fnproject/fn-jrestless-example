@@ -1,9 +1,0 @@
-com/oracle/faas/jrestlessexample/BlogPost.class
-com/oracle/faas/jrestlessexample/OracleFunctionsRequestHandler.class
-com/oracle/faas/jrestlessexample/OracleFunctionsRequestHandler$ResponseWriter.class
-com/oracle/faas/jrestlessexample/FunctionsDatabase.class
-com/oracle/faas/jrestlessexample/OracleFunctionsRequestHandler$1.class
-com/oracle/faas/jrestlessexample/BloggingClass.class
-com/oracle/faas/jrestlessexample/FunctionsDatabase$DataBaseAccessException.class
-com/oracle/faas/jrestlessexample/ExampleClass.class
-com/oracle/faas/jrestlessexample/OracleFunctionsRequestHandler$WrappedInput.class
