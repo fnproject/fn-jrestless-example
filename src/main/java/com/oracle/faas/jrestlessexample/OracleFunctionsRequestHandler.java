@@ -122,7 +122,9 @@ public abstract class OracleFunctionsRequestHandler extends SimpleRequestHandler
     private Map<String, List<String>> expandHeaders(Map<String, String> headers) {
         Map<String, List<String>> theHeaders = new HashMap<>();
         for (Map.Entry<String, String> e : headers.entrySet()){
-            theHeaders.put(unMangleKey(e.getKey()), Collections.singletonList(e.getValue()));
+            if(e.getKey() != null && e.getValue() != null){
+                theHeaders.put(unMangleKey(e.getKey()), Collections.singletonList(e.getValue()));
+            }
         }
         return theHeaders;
     }
