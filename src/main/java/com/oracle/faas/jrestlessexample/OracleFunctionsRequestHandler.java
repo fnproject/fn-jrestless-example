@@ -44,11 +44,7 @@ public abstract class OracleFunctionsRequestHandler extends SimpleRequestHandler
     private boolean success = true;
     private static final Type INPUT_EVENT_TYPE = (new TypeLiteral<Ref<InputEvent>>() { }).getType();
     private static final Type RUNTIME_CONTEXT_TYPE = (new TypeLiteral<Ref<RuntimeContext>>() { }).getType();
-
-
-    protected OracleFunctionsRequestHandler(){
-
-    }
+    private static final URI BASE_ROOT_URI = URI.create("/");
 
     @Override
     protected JRestlessContainerRequest createContainerRequest(WrappedInput wrappedInput) {
@@ -57,16 +53,9 @@ public abstract class OracleFunctionsRequestHandler extends SimpleRequestHandler
 
         requireNonNull(inputEvent);
 
-        String path = inputEvent.getRoute();
-
-        URI baseUri = URI.create("/");
-
-        UriBuilder reqUriBuilder = UriBuilder.fromUri(baseUri).path(path);
-        addQueryParametersIfAvailable(reqUriBuilder, inputEvent);
-
         String httpMethod = inputEvent.getMethod();
 
-        RequestAndBaseUri requestAndBaseUri = new RequestAndBaseUri(baseUri, reqUriBuilder.build());
+        RequestAndBaseUri requestAndBaseUri = getRequestAndBaseUri(inputEvent);
 
         DefaultJRestlessContainerRequest container = new DefaultJRestlessContainerRequest(
                 requestAndBaseUri,
@@ -75,6 +64,50 @@ public abstract class OracleFunctionsRequestHandler extends SimpleRequestHandler
                 this.expandHeaders(inputEvent.getHeaders().getAll()));
 
         return container;
+    }
+
+    //TODO: Add to when routes aquire the ability to have wildcards e.g. 'String basePath = getBasePathUri(inputEvent)'
+    //TODO: Check the 'else' statement has everything required
+    //TODO: add a test for checking that 'inputEvent.getRoute()' will continue to be relevant
+    //TODO: Test that this doesn't only work locally!!!
+    @Nonnull
+    protected RequestAndBaseUri getRequestAndBaseUri(@Nonnull InputEvent inputEvent){
+        URI baseUri;
+        URI baseUriWithoutBasePath;
+        UriBuilder baseUriBuilder;
+        try {
+            String host = getHost(inputEvent);
+            boolean hostPresent = !isBlank(host);
+            if(!hostPresent) {
+                LOG.warn("No host header available; using baseUri=/ as fallback");
+                baseUriBuilder = UriBuilder.fromUri(BASE_ROOT_URI);
+            } else {
+                baseUriBuilder = UriBuilder.fromUri("https://" + host);
+            }
+
+            baseUriWithoutBasePath = baseUriBuilder.build(new Object[0]);
+            baseUri = baseUriBuilder.build(new Object[0]);
+        } catch (RuntimeException e) {
+            LOG.error("baseUriCreationFailure; using baseUri=/ as fallback", e);
+            baseUri = BASE_ROOT_URI;
+            baseUriWithoutBasePath = baseUri;
+        }
+
+        baseUriBuilder = UriBuilder.fromUri(baseUriWithoutBasePath).path(inputEvent.getRoute());
+        addQueryParametersIfAvailable(baseUriBuilder, inputEvent);
+        return new RequestAndBaseUri(baseUri, baseUriBuilder.build(new Object[0]));
+    }
+
+    private static boolean isBlank(String s) {
+        return (s == null) || s.trim().isEmpty();
+    }
+
+    private static String getHost(InputEvent inputEvent){
+        Map<String, String> headers = inputEvent.getHeaders().getAll();
+        if (headers == null) {
+            return null;
+        }
+        return headers.get("Host");
     }
 
     private static void addQueryParametersIfAvailable(UriBuilder uriBuilder, InputEvent inputEvent) {

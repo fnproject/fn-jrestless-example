@@ -8,10 +8,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-public class FunctionsDatabase {
+public class BlogStore {
     final private Connection connection;
 
-    public FunctionsDatabase(Connection connection){
+    public BlogStore(Connection connection){
         this.connection = Objects.requireNonNull(connection);
     }
 
