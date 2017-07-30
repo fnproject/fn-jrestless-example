@@ -2,7 +2,10 @@ package com.oracle.faas.jrestlessexample;
 
 import com.oracle.faas.testing.FnTesting;
 import org.apache.commons.io.IOUtils;
-import org.junit.*;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
 
 import java.io.IOException;
 import java.net.URISyntaxException;

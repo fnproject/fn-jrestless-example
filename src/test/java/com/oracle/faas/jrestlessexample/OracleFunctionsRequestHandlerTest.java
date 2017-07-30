@@ -20,7 +20,7 @@ import static java.util.Collections.singletonList;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.mock;
 
-//TODO: Refactor all test names
+//TODO: Add response writer tests
 public class OracleFunctionsRequestHandlerTest {
     private JRestlessHandlerContainer<JRestlessContainerRequest> container;
     private OracleFunctionsRequestHandler requestHandler;
