@@ -122,6 +122,6 @@ $ fn routes create jrestless-example /sample/health
 
 From here the function can now be called:
 ```bash
-$ curl -H 'Accept: application/json' -X GET 'http://localhost:8080/r/jretless-example/sample/health'
+$ curl -H 'Accept: application/json' -X GET 'http://localhost:8080/r/jrestless-example/sample/health'
 # {"statusMessage":"up and running"}
 ```
