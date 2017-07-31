@@ -37,7 +37,7 @@ import java.util.Map;
 
 import static java.util.Objects.requireNonNull;
 
-public abstract class OracleFunctionsRequestHandler extends SimpleRequestHandler<OracleFunctionsRequestHandler.WrappedInput, OutputEvent> {
+public abstract class OracleFunctionsRequestHandler extends SimpleRequestHandler<OracleFunctionsRequestHandler.WrappedInput, OracleFunctionsRequestHandler.OutputResponse> {
     private RuntimeContext rctx;
     private static final Logger LOG = LoggerFactory.getLogger(OracleFunctionsRequestHandler.class);
     private String defaultContentType = "applications/json";
@@ -85,8 +85,11 @@ public abstract class OracleFunctionsRequestHandler extends SimpleRequestHandler
                 baseUriBuilder = UriBuilder.fromUri("https://" + host);
             }
 
-            baseUriWithoutBasePath = baseUriBuilder.build(new Object[0]);
-            baseUri = baseUriBuilder.build(new Object[0]);
+            baseUriWithoutBasePath = baseUriBuilder.build();
+            if(hostPresent) {
+                baseUriBuilder.path("/");
+            }
+            baseUri = baseUriBuilder.build();
         } catch (RuntimeException e) {
             LOG.error("baseUriCreationFailure; using baseUri=/ as fallback", e);
             baseUri = BASE_ROOT_URI;
@@ -95,7 +98,7 @@ public abstract class OracleFunctionsRequestHandler extends SimpleRequestHandler
 
         baseUriBuilder = UriBuilder.fromUri(baseUriWithoutBasePath).path(inputEvent.getRoute());
         addQueryParametersIfAvailable(baseUriBuilder, inputEvent);
-        return new RequestAndBaseUri(baseUri, baseUriBuilder.build(new Object[0]));
+        return new RequestAndBaseUri(baseUri, baseUriBuilder.build());
     }
 
     private static boolean isBlank(String s) {
@@ -188,15 +191,15 @@ public abstract class OracleFunctionsRequestHandler extends SimpleRequestHandler
     }
 
     @Override
-    protected SimpleResponseWriter<OutputEvent> createResponseWriter(@Nonnull WrappedInput wrappedInput) {
+    protected SimpleResponseWriter<OutputResponse> createResponseWriter(@Nonnull WrappedInput wrappedInput) {
         return new ResponseWriter();
     }
 
-    private class ResponseWriter implements SimpleResponseWriter<OutputEvent> {
-        private OutputEvent response;
+    private class ResponseWriter implements SimpleResponseWriter<OutputResponse> {
+        private OutputResponse response;
 
         @Override
-        public OutputEvent getResponse() {
+        public OutputResponse getResponse() {
             return response;
         }
 
@@ -205,28 +208,26 @@ public abstract class OracleFunctionsRequestHandler extends SimpleRequestHandler
             return new ByteArrayOutputStream();
         }
 
+        //TODO: When should success be false?
         @Override
         public void writeResponse(@Nonnull Response.StatusType statusType, @Nonnull Map<String, List<String>> map, @Nonnull OutputStream outputStream) throws IOException {
             String responseBody = ((ByteArrayOutputStream) outputStream).toString(StandardCharsets.UTF_8.name());
             String contentType = map.getOrDefault("Content-Type", Collections.singletonList(defaultContentType)).get(0);
-            response = OutputEvent.fromBytes(responseBody.getBytes(), success, contentType);
+            OutputEvent outputEvent = OutputEvent.fromBytes(responseBody.getBytes(), success, contentType);
+            response = new OutputResponse(outputEvent, responseBody, map, statusType);
         }
     }
 
     @Override
-    protected OutputEvent onRequestFailure(Exception e, WrappedInput wrappedInput, @Nullable JRestlessContainerRequest jRestlessContainerRequest) {
+    protected OutputResponse onRequestFailure(Exception e, WrappedInput wrappedInput, @Nullable JRestlessContainerRequest jRestlessContainerRequest) {
         LOG.error("request failed", e);
         System.err.println("request failed" + e.getMessage());
         e.printStackTrace();
-        return OutputEvent.emptyResult(false);
+        OutputEvent outputEvent = OutputEvent.emptyResult(false);
+        return new OutputResponse(outputEvent, null, Collections.emptyMap(), Response.Status.INTERNAL_SERVER_ERROR);
     }
 
-    public OutputEvent handleRequest(InputEvent inputEvent){
-        return inputEvent.consumeBody((inputStream) -> {
-            WrappedInput wrappedInput = new WrappedInput(inputEvent, inputStream);
-            return this.delegateRequest(wrappedInput);
-        });
-    }
+
 
     @FnConfiguration
     public void setRuntimeContext(RuntimeContext rctx){
@@ -240,6 +241,23 @@ public abstract class OracleFunctionsRequestHandler extends SimpleRequestHandler
         WrappedInput(InputEvent inputEvent, InputStream stream) {
             this.inputEvent = inputEvent;
             this.stream = stream;
+        }
+    }
+
+    static class OutputResponse {
+        final OutputEvent outputEvent;
+        final String body;
+        final Map<String, List<String>> headers;
+        final int statusCode;
+
+        OutputResponse(@Nonnull OutputEvent outputEvent, @Nullable String body, @Nonnull Map<String, List<String>> headers,
+                       @Nonnull Response.StatusType statusType){
+            requireNonNull(headers);
+            requireNonNull(statusType);
+            this.statusCode = statusType.getStatusCode();
+            this.body = body;
+            this.headers = Collections.unmodifiableMap(new HashMap<>(headers));
+            this.outputEvent = outputEvent;
         }
     }
 }
