@@ -210,7 +210,8 @@ public class OracleFunctionsRequestHandlerIntTest {
         assertEquals(exceptionMapper.getSimpleName(), outputResponse.body);
     }
 
-    @Ignore
+    // Note: This is a feature that is yet to be implemented in the Functions platform
+    // The Functions platform currently only returns status codes of 200 or 500
     @Test
     public void testIncorrectRoute() {
         InputEvent inputEvent = new ReadOnceInputEvent("myApp",
@@ -346,6 +347,11 @@ public class OracleFunctionsRequestHandlerIntTest {
     public static class GlobalExceptionMapper implements ExceptionMapper<Exception> {
         @Override
         public Response toResponse(Exception exception) {
+            if(exception instanceof WebApplicationException) {
+                WebApplicationException wae = (WebApplicationException) exception;
+                return wae.getResponse();
+            }
+
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(GlobalExceptionMapper.class.getSimpleName())
                     .build();
         }

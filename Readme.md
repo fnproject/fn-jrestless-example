@@ -111,14 +111,11 @@ public class RequestHandler extends OracleFunctionsRequestObjectHandler {
 
 At the moment as Oracle Functions is not currently integrated into jrestless for this to work the package com.example.faas also needs the classes; [OracleFunctionsRequestObjectHandler](https://gitlab-odx.oracle.com/odx/jrestless-jfaas/blob/master/src/main/java/com/oracle/faas/jrestlessexample/OracleFunctionsRequestObjectHandler.java), [OracleFunctionsRequestHandler](https://gitlab-odx.oracle.com/odx/jrestless-jfaas/blob/master/src/main/java/com/oracle/faas/jrestlessexample/OracleFunctionsRequestHandler.java) and [OracleFeature](https://gitlab-odx.oracle.com/odx/jrestless-jfaas/blob/master/src/main/java/com/oracle/faas/jrestlessexample/OracleFeature.java).
 
-From here the function should build successfully when run:
+
+From here make sure you've got the Oracle Functions Server up and running ([Quickstart](https://github.com/fnproject/fn#quickstart)).
 
 ```bash
-$ fn run
-```
-From here make sure you've the Oracle Functions Server up and running.
-
-```bash
+$ fn build
 $ fn apps create jrestless-example
 $ fn routes create jrestless-example /sample/health
 ```
