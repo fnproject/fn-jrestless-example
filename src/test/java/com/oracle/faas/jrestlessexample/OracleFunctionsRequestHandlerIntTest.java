@@ -95,7 +95,6 @@ public class OracleFunctionsRequestHandlerIntTest {
         verify(testService).injectInputEvent(same(inputEvent));
     }
 
-    //TODO: Make this test more convincing
     @Test
     public void testRoundTrip() throws JsonProcessingException {
         ObjectMapper mapper = new ObjectMapper();
@@ -209,6 +208,21 @@ public class OracleFunctionsRequestHandlerIntTest {
         OracleFunctionsRequestHandler.OutputResponse outputResponse = handler.handleRequest(inputEvent);
         assertEquals(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(), outputResponse.statusCode);
         assertEquals(exceptionMapper.getSimpleName(), outputResponse.body);
+    }
+
+    @Ignore
+    @Test
+    public void testIncorrectRoute() {
+        InputEvent inputEvent = new ReadOnceInputEvent("myApp",
+                "/unspecified/route",
+                "www.example.com",
+                "GET",
+                defaultBody,
+                new HeadersImpl(new HashMap<>()),
+                new QueryParametersImpl());
+
+        OracleFunctionsRequestHandler.OutputResponse outputResponse = handler.handleRequest(inputEvent);
+        assertEquals(404, outputResponse.statusCode);
     }
 
     public static class OracleFunctionsRequestHandlerImpl extends  OracleFunctionsTestObjectHandler {
@@ -337,3 +351,6 @@ public class OracleFunctionsRequestHandlerIntTest {
         }
     }
 }
+
+
+

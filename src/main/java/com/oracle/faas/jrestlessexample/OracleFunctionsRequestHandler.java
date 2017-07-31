@@ -214,7 +214,7 @@ public abstract class OracleFunctionsRequestHandler extends SimpleRequestHandler
             String responseBody = ((ByteArrayOutputStream) outputStream).toString(StandardCharsets.UTF_8.name());
             String contentType = map.getOrDefault("Content-Type", Collections.singletonList(defaultContentType)).get(0);
             OutputEvent outputEvent = OutputEvent.fromBytes(responseBody.getBytes(), success, contentType);
-            response = new OutputResponse(outputEvent, responseBody, map, statusType);
+            response = new OutputResponse(outputEvent, responseBody, statusType);
         }
     }
 
@@ -224,7 +224,7 @@ public abstract class OracleFunctionsRequestHandler extends SimpleRequestHandler
         System.err.println("request failed" + e.getMessage());
         e.printStackTrace();
         OutputEvent outputEvent = OutputEvent.emptyResult(false);
-        return new OutputResponse(outputEvent, null, Collections.emptyMap(), Response.Status.INTERNAL_SERVER_ERROR);
+        return new OutputResponse(outputEvent, null, Response.Status.INTERNAL_SERVER_ERROR);
     }
 
 
@@ -246,17 +246,15 @@ public abstract class OracleFunctionsRequestHandler extends SimpleRequestHandler
 
     static class OutputResponse {
         final OutputEvent outputEvent;
+        @Deprecated // This is not available to the user yet
         final String body;
-        final Map<String, List<String>> headers;
+        @Deprecated // The functions platform prevents the setting of a non-200 result (or 500 in the case of an external platform error)
         final int statusCode;
 
-        OutputResponse(@Nonnull OutputEvent outputEvent, @Nullable String body, @Nonnull Map<String, List<String>> headers,
-                       @Nonnull Response.StatusType statusType){
-            requireNonNull(headers);
+        OutputResponse(@Nonnull OutputEvent outputEvent, @Nullable String body, @Nonnull Response.StatusType statusType){
             requireNonNull(statusType);
             this.statusCode = statusType.getStatusCode();
             this.body = body;
-            this.headers = Collections.unmodifiableMap(new HashMap<>(headers));
             this.outputEvent = outputEvent;
         }
     }

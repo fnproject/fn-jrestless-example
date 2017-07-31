@@ -1,4 +1,4 @@
-package com.oracle.faas.jrestlessexample;
+package com.oracle.faas.jrestlessexample.BloggingApplication;
 
 public class BlogPost {
     private String date;
