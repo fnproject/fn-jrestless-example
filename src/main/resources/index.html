@@ -1,0 +1,192 @@
+<html>
+
+
+<style type="text/css">
+
+    html { display: block; }
+
+    body {
+        display: block;
+        margin: 8px;
+        padding: 30px;
+    }
+
+    h1 { font-family: Menlo; }
+
+    h1:after {
+        content:' ';
+        display:block;
+        border:1px solid #d3d3d3;
+        margin-top:15Px;
+    }
+
+    #posts-go-in-here {
+        display: block;
+        position: absolute;
+        left: 10%;
+    }
+
+    #posts-go-in-here > div {
+        display: grid;
+        grid-gap: 5px;
+        grid-template-columns: [col1-start] 400px [col2-start] 300px [col2-end];
+        grid-template-rows: [row1-start] 30px [row2-start] 50px [row3-start] auto [row3-end];
+        font-family: Menlo;
+        margin-top:50px;
+        transition: all 1s ease-in;
+    }
+
+    #posts-go-in-here > div > h2 {
+        grid-column: col1-start;
+        grid-row: row1-start;
+    }
+
+    #posts-go-in-here > div > h4.author {
+        grid-column: col1-start;
+        grid-row: row2-start;
+    }
+
+    #posts-go-in-here > div > h4.date {
+        grid-column: col2-start;
+        grid-row: row2-start;
+    }
+
+    #posts-go-in-here > div > p {
+        grid-column: col1-start / col2-end;
+        grid-row: row3-start;
+        color: #354E61;
+    }
+
+    #posts-go-in-here > div > h4:after {
+        content:' ';
+        display:block;
+        border:1px solid #d3d3d3;
+        margin-top:10Px;
+    }
+
+    #container {
+        display: grid;
+        grid-gap: 5px;
+        position: absolute;
+        right: 10%;
+        padding-top: 30px;
+    }
+
+    #container > #titletext {
+        width: 400px;
+        background-color: #f1f1f1;
+    }
+
+    #container > #body {
+        height: 200px;
+        background-color: #f1f1f1;
+    }
+
+    #container > #addbutton {
+        background-color:#d3d3d3;
+        border:#354E61
+    }
+
+    input, textarea, select, button {
+        font: 15px system-ui;
+    }
+
+    .post { color: white; height: 0; }
+    .added { color: black; height: inherit; }
+
+
+</style>
+
+<title>
+    Blog
+</title>
+<body>
+<h1>My Blog</h1>
+<div id="container">
+    <input id="titletext" placeholder="title"/>
+    <textarea id="body" placeholder="content"></textarea>
+    <input id="addbutton" type="button" value="Add"/>
+</div>
+
+
+
+<div id="posts-go-in-here"></div>
+
+</body>
+<script>
+    var formPost = function( aPost ) {
+        var thePostDiv = document.createElement("div");
+        thePostDiv.className = "post"
+
+        var theTitle = document.createElement("h2");
+        theTitle.innerHTML = aPost.title;
+
+        var theDate = document.createElement("h4");
+        theDate.innerHTML = aPost.date;
+        theDate.className = "date";
+
+        var theAuthor = document.createElement("h4");
+        theAuthor.innerHTML = aPost.author;
+        theAuthor.className = "author";
+
+        var theContents = document.createElement("p");
+        theContents.innerHTML = aPost.body;
+
+        thePostDiv.appendChild(theTitle);
+        thePostDiv.appendChild(theAuthor);
+        thePostDiv.appendChild(theDate);
+        thePostDiv.appendChild(theContents);
+
+        var theListDiv = document.getElementById("posts-go-in-here");
+        theListDiv.insertBefore(thePostDiv, theListDiv.firstChild);
+
+        thePostDiv.className = "post added"
+    }
+
+    var fetchAllPosts = function(){
+        httpRequest = new XMLHttpRequest();
+        httpRequest.onreadystatechange = function(){
+            if(httpRequest.readyState === XMLHttpRequest.DONE) {
+                console.log(httpRequest.responseText);
+                var posts = JSON.parse(httpRequest.responseText);
+                var length = posts.length;
+                for (var i = 0; i < length; i++) {
+                    formPost(posts[i]);
+                }
+            }
+        };
+        httpRequest.open('GET', 'blogs', true);
+        httpRequest.send();
+    }
+
+    fetchAllPosts();
+
+    var addPost = function(){
+        var titleText = document.getElementById("titletext").value;
+        var body = document.getElementById("body").value;
+        console.log(titleText, body);
+
+        var thePost = {"author": "Rae",
+                       "date": (new Date().toString().split(" GMT")[0]),
+                       "title": titleText,
+                       "body": body};
+
+        console.log(JSON.stringify(thePost));
+        post = new XMLHttpRequest();
+
+        post.onreadystatechange = function(){
+            if(post.readyState === XMLHttpRequest.DONE) {
+                formPost(thePost);
+            }
+        }
+
+        post.open('POST', 'add', true);
+        post.setRequestHeader("Content-Type", "application/json");
+        post.send(JSON.stringify(thePost));
+
+    }
+
+    document.getElementById("addbutton").onclick = addPost;
+
+</script>
+</html>

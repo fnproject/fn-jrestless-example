@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<metadata>
+  <groupId>com.jrestless.core</groupId>
+  <artifactId>jrestless-core-container</artifactId>
+  <version>0.5.2-SNAPSHOT</version>
+  <versioning>
+    <snapshot>
+      <localCopy>true</localCopy>
+    </snapshot>
+    <lastUpdated>20171114104611</lastUpdated>
+  </versioning>
+</metadata>

@@ -1,0 +1,1 @@
+# This file does nothing, but its appearance in the mysql logs means the schema is set up

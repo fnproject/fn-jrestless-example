@@ -1,0 +1,7 @@
+name: raej/jrest
+version: 0.0.1
+runtime: java
+cmd: com.example.fnjrestless.blog.BloggingApp::handleRequest
+format: http
+timeout: 120
+path: /route/add
