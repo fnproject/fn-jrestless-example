@@ -7,17 +7,14 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jrestless.core.container.dpi.InstanceBinder;
 import com.jrestless.core.filter.ApplicationPathFilter;
 import com.oracle.faas.api.InputEvent;
-import com.oracle.faas.api.OutputEvent;
 import com.oracle.faas.api.RuntimeContext;
 import com.oracle.faas.runtime.HeadersImpl;
 import com.oracle.faas.runtime.QueryParametersImpl;
 import com.oracle.faas.runtime.ReadOnceInputEvent;
-import jdk.nashorn.internal.ir.annotations.Immutable;
 import jersey.repackaged.com.google.common.collect.ImmutableMap;
 import org.glassfish.hk2.utilities.Binder;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import javax.inject.Inject;
@@ -34,7 +31,6 @@ import java.io.FileNotFoundException;
 import java.net.URI;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
 
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.same;
@@ -110,10 +106,10 @@ public class OracleFunctionsRequestHandlerIntTest {
                 body,
                 new HeadersImpl(inputHeaders),
                 new QueryParametersImpl());
-        OracleFunctionsRequestHandler.OutputResponse outputResponse = handler.handleRequest(inputEvent);
+        OracleFunctionsRequestHandler.WrappedOutput wrappedOutput = handler.handleRequest(inputEvent);
 
-        assertEquals(200, outputResponse.statusCode);
-        assertEquals(contents, outputResponse.body);
+        assertEquals(200, wrappedOutput.statusCode);
+        assertEquals(contents, wrappedOutput.body);
     }
 
     @Test
@@ -205,9 +201,9 @@ public class OracleFunctionsRequestHandlerIntTest {
                 new HeadersImpl(new HashMap<>()),
                 new QueryParametersImpl());
 
-        OracleFunctionsRequestHandler.OutputResponse outputResponse = handler.handleRequest(inputEvent);
-        assertEquals(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(), outputResponse.statusCode);
-        assertEquals(exceptionMapper.getSimpleName(), outputResponse.body);
+        OracleFunctionsRequestHandler.WrappedOutput wrappedOutput = handler.handleRequest(inputEvent);
+        assertEquals(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(), wrappedOutput.statusCode);
+        assertEquals(exceptionMapper.getSimpleName(), wrappedOutput.body);
     }
 
     // Note: This is a feature that is yet to be implemented in the Functions platform
@@ -222,8 +218,8 @@ public class OracleFunctionsRequestHandlerIntTest {
                 new HeadersImpl(new HashMap<>()),
                 new QueryParametersImpl());
 
-        OracleFunctionsRequestHandler.OutputResponse outputResponse = handler.handleRequest(inputEvent);
-        assertEquals(404, outputResponse.statusCode);
+        OracleFunctionsRequestHandler.WrappedOutput wrappedOutput = handler.handleRequest(inputEvent);
+        assertEquals(404, wrappedOutput.statusCode);
     }
 
     public static class OracleFunctionsRequestHandlerImpl extends  OracleFunctionsTestObjectHandler {

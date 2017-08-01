@@ -38,7 +38,6 @@ public class BlogStore {
                 st.setString(2, post.getDate());
                 st.setString(3, post.getAuthor());
                 st.setString(4, post.getBody());
-                System.err.println("CREATE NEW POST");
 
                 st.executeUpdate();
             } catch(SQLException se){

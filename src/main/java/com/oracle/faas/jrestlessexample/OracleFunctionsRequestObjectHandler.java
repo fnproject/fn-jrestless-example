@@ -12,7 +12,7 @@ public class OracleFunctionsRequestObjectHandler extends OracleFunctionsRequestH
     public OutputEvent handleRequest(InputEvent inputEvent){
         return inputEvent.consumeBody((inputStream) -> {
             WrappedInput wrappedInput = new WrappedInput(inputEvent, inputStream);
-            OutputResponse response = this.delegateRequest(wrappedInput);
+            WrappedOutput response = this.delegateRequest(wrappedInput);
             return response.outputEvent;
         });
     }

@@ -37,14 +37,15 @@ import java.util.Map;
 
 import static java.util.Objects.requireNonNull;
 
-public abstract class OracleFunctionsRequestHandler extends SimpleRequestHandler<OracleFunctionsRequestHandler.WrappedInput, OracleFunctionsRequestHandler.OutputResponse> {
-    private RuntimeContext rctx;
-    private static final Logger LOG = LoggerFactory.getLogger(OracleFunctionsRequestHandler.class);
-    private String defaultContentType = "applications/json";
-    private boolean success = true;
+public abstract class OracleFunctionsRequestHandler extends SimpleRequestHandler<OracleFunctionsRequestHandler.WrappedInput, OracleFunctionsRequestHandler.WrappedOutput> {
     private static final Type INPUT_EVENT_TYPE = (new TypeLiteral<Ref<InputEvent>>() { }).getType();
     private static final Type RUNTIME_CONTEXT_TYPE = (new TypeLiteral<Ref<RuntimeContext>>() { }).getType();
     private static final URI BASE_ROOT_URI = URI.create("/");
+    private static final Logger LOG = LoggerFactory.getLogger(OracleFunctionsRequestHandler.class);
+    private RuntimeContext rctx;
+    private String defaultContentType = "applications/json";
+    private boolean success = true;
+
 
     @Override
     protected JRestlessContainerRequest createContainerRequest(WrappedInput wrappedInput) {
@@ -67,8 +68,6 @@ public abstract class OracleFunctionsRequestHandler extends SimpleRequestHandler
     }
 
     //TODO: Add to when routes aquire the ability to have wildcards e.g. 'String basePath = getBasePathUri(inputEvent)'
-    //TODO: Check the 'else' statement has everything required
-    //TODO: add a test for checking that 'inputEvent.getRoute()' will continue to be relevant
     //TODO: Test that this doesn't only work locally!!!
     @Nonnull
     protected RequestAndBaseUri getRequestAndBaseUri(@Nonnull InputEvent inputEvent){
@@ -158,7 +157,6 @@ public abstract class OracleFunctionsRequestHandler extends SimpleRequestHandler
                 LOG.error("RuntimeContext injection will not work");
             }
         });
-        //TODO: Add "actualContainerRequest.setProperty(..." etc?
     }
 
     @Override
@@ -191,40 +189,42 @@ public abstract class OracleFunctionsRequestHandler extends SimpleRequestHandler
     }
 
     @Override
-    protected SimpleResponseWriter<OutputResponse> createResponseWriter(@Nonnull WrappedInput wrappedInput) {
+    protected SimpleResponseWriter<WrappedOutput> createResponseWriter(@Nonnull WrappedInput wrappedInput) {
         return new ResponseWriter();
     }
 
-    private class ResponseWriter implements SimpleResponseWriter<OutputResponse> {
-        private OutputResponse response;
+    private class ResponseWriter implements SimpleResponseWriter<WrappedOutput> {
+        private WrappedOutput response;
 
         @Override
-        public OutputResponse getResponse() {
+        public WrappedOutput getResponse() {
             return response;
         }
 
         @Override
-        public OutputStream getEntityOutputStream() {
+        public ByteArrayOutputStream getEntityOutputStream() {
             return new ByteArrayOutputStream();
         }
 
         //TODO: When should success be false?
         @Override
-        public void writeResponse(@Nonnull Response.StatusType statusType, @Nonnull Map<String, List<String>> map, @Nonnull OutputStream outputStream) throws IOException {
+        public void writeResponse(@Nonnull Response.StatusType statusType, @Nonnull Map<String, List<String>> headers, @Nonnull OutputStream outputStream) throws IOException {
+            // NOTE: This is a safe cast as it is set to a ByteArrayOutputStream by getEntityOutputStream
+            // See JRestlessHandlerContainer class for more details
             String responseBody = ((ByteArrayOutputStream) outputStream).toString(StandardCharsets.UTF_8.name());
-            String contentType = map.getOrDefault("Content-Type", Collections.singletonList(defaultContentType)).get(0);
+            String contentType = headers.getOrDefault("Content-Type", Collections.singletonList(defaultContentType)).get(0);
             OutputEvent outputEvent = OutputEvent.fromBytes(responseBody.getBytes(), success, contentType);
-            response = new OutputResponse(outputEvent, responseBody, statusType);
+            response = new WrappedOutput(outputEvent, responseBody, statusType);
         }
     }
 
     @Override
-    protected OutputResponse onRequestFailure(Exception e, WrappedInput wrappedInput, @Nullable JRestlessContainerRequest jRestlessContainerRequest) {
+    protected WrappedOutput onRequestFailure(Exception e, WrappedInput wrappedInput, @Nullable JRestlessContainerRequest jRestlessContainerRequest) {
         LOG.error("request failed", e);
         System.err.println("request failed" + e.getMessage());
         e.printStackTrace();
         OutputEvent outputEvent = OutputEvent.emptyResult(false);
-        return new OutputResponse(outputEvent, null, Response.Status.INTERNAL_SERVER_ERROR);
+        return new WrappedOutput(outputEvent, null, Response.Status.INTERNAL_SERVER_ERROR);
     }
 
 
@@ -244,14 +244,14 @@ public abstract class OracleFunctionsRequestHandler extends SimpleRequestHandler
         }
     }
 
-    static class OutputResponse {
+    static class WrappedOutput {
         final OutputEvent outputEvent;
         @Deprecated // This is not available to the user yet
         final String body;
         @Deprecated // The functions platform prevents the setting of a non-200 result (or 500 in the case of an external platform error)
         final int statusCode;
 
-        OutputResponse(@Nonnull OutputEvent outputEvent, @Nullable String body, @Nonnull Response.StatusType statusType){
+        WrappedOutput(@Nonnull OutputEvent outputEvent, @Nullable String body, @Nonnull Response.StatusType statusType){
             requireNonNull(statusType);
             this.statusCode = statusType.getStatusCode();
             this.body = body;
