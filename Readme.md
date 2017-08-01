@@ -13,7 +13,7 @@ Create a new function using the Oracle Functions CLI as you would if simply crea
 ```bash
 $ mkdir oracle-functions-usage-example
 $ cd oracle-functions-usage-example
-fn init --runtime=java jbloggs/hello
+$ fn init --runtime=java jbloggs/jrestless
 Runtime: java
 function boilerplate generated.
 func.yaml created
