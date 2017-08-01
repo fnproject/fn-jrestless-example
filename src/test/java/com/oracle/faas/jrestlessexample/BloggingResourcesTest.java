@@ -1,6 +1,5 @@
 package com.oracle.faas.jrestlessexample;
 
-import com.oracle.faas.jrestlessexample.BloggingApplication.BloggingApp;
 import com.oracle.faas.testing.FnTesting;
 import org.apache.commons.io.IOUtils;
 import org.junit.Assert;

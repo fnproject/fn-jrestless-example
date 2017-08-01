@@ -1,4 +1,4 @@
-package com.oracle.faas.jrestlessexample.BloggingApplication;
+package com.oracle.faas.jrestlessexample;
 
 
 import com.oracle.faas.api.RuntimeContext;

@@ -112,7 +112,7 @@
                     <archive>
                         <index>true</index>
                         <manifest>
-                            <mainClass>com.oracle.faas.jrestlessexample.BloggingApplication.BloggingApp</mainClass>
+                            <mainClass>com.oracle.faas.jrestlessexample.BloggingApp</mainClass>
                         </manifest>
                     </archive>
                 </configuration>

@@ -1,4 +1,4 @@
-package com.oracle.faas.jrestlessexample.BloggingApplication;
+package com.oracle.faas.jrestlessexample;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;

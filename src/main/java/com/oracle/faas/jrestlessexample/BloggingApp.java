@@ -1,7 +1,5 @@
-package com.oracle.faas.jrestlessexample.BloggingApplication;
+package com.oracle.faas.jrestlessexample;
 
-import com.oracle.faas.jrestlessexample.OracleFeature;
-import com.oracle.faas.jrestlessexample.OracleFunctionsRequestObjectHandler;
 import org.glassfish.jersey.server.ResourceConfig;
 
 public class BloggingApp extends OracleFunctionsRequestObjectHandler {
