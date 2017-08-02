@@ -1,6 +1,3 @@
-package com.oracle.faas.jrestlessexample;
-
-
 import com.oracle.faas.api.RuntimeContext;
 
 import javax.ws.rs.*;

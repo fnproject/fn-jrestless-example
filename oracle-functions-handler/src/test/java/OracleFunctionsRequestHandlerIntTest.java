@@ -1,5 +1,3 @@
-package com.oracle.faas.jrestlessexample;
-
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -38,7 +36,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 
 public class OracleFunctionsRequestHandlerIntTest {
-    private OracleFunctionsRequestHandlerImpl handler;
+    private OracleFunctionsTestObjectHandler handler;
     private TestService testService;
     private RuntimeContext runtimeContext = mock(RuntimeContext.class);
     private ByteArrayInputStream defaultBody;
@@ -50,7 +48,7 @@ public class OracleFunctionsRequestHandlerIntTest {
         defaultBody = new ByteArrayInputStream(new byte[]{});
     }
 
-    private OracleFunctionsRequestHandlerImpl createAndStartHandler(ResourceConfig config, TestService testService) {
+    private OracleFunctionsTestObjectHandler createAndStartHandler(ResourceConfig config, TestService testService) {
         Binder binder = new InstanceBinder.Builder().addInstance(testService, TestService.class).build();
         config.register(binder);
         config.register(TestResource.class);
@@ -58,7 +56,7 @@ public class OracleFunctionsRequestHandlerIntTest {
         config.register(SomeCheckedAppExceptionMapper.class);
         config.register(SomeUncheckedAppExceptionMapper.class);
         config.register(GlobalExceptionMapper.class);
-        OracleFunctionsRequestHandlerImpl handler = new OracleFunctionsRequestHandlerImpl();
+        OracleFunctionsTestObjectHandler handler = new OracleFunctionsTestObjectHandler();
         handler.init(config);
         handler.start();
         handler.setRuntimeContext(runtimeContext);
@@ -143,7 +141,7 @@ public class OracleFunctionsRequestHandlerIntTest {
 
     @Test
     public void testAppPathWithoutHost() {
-        OracleFunctionsRequestHandlerImpl handlerWithAppPath = createAndStartHandler(new ApiResourceConfig(), testService);
+        OracleFunctionsTestObjectHandler handlerWithAppPath = createAndStartHandler(new ApiResourceConfig(), testService);
         InputEvent inputEvent = new ReadOnceInputEvent("myApp",
                 "/api/uris",
                 "www.example.com",
@@ -159,7 +157,7 @@ public class OracleFunctionsRequestHandlerIntTest {
     @Test
     public void testAppPathWithHost() {
         Map<String, String> inputHeaders = ImmutableMap.of(HttpHeaders.HOST, "www.example.com");
-        OracleFunctionsRequestHandlerImpl handlerWithAppPath = createAndStartHandler(new ApiResourceConfig(), testService);
+        OracleFunctionsTestObjectHandler handlerWithAppPath = createAndStartHandler(new ApiResourceConfig(), testService);
         InputEvent inputEvent = new ReadOnceInputEvent("myApp",
                 "/api/uris",
                 "www.example.com",
@@ -220,9 +218,6 @@ public class OracleFunctionsRequestHandlerIntTest {
 
         OracleFunctionsRequestHandler.WrappedOutput wrappedOutput = handler.handleRequest(inputEvent);
         assertEquals(404, wrappedOutput.statusCode);
-    }
-
-    public static class OracleFunctionsRequestHandlerImpl extends  OracleFunctionsTestObjectHandler {
     }
 
     public interface TestService{
@@ -317,6 +312,11 @@ public class OracleFunctionsRequestHandlerIntTest {
         private static final long serialVersionUID = 1L;
     }
 
+
+    public static class SomeUncheckedAppException extends RuntimeException {
+        private static final long serialVersionUID = 1L;
+    }
+
     @Provider
     public static class SomeCheckedAppExceptionMapper implements ExceptionMapper<SomeCheckedAppException> {
         @Override
@@ -324,10 +324,6 @@ public class OracleFunctionsRequestHandlerIntTest {
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
                     .entity(SomeCheckedAppExceptionMapper.class.getSimpleName()).build();
         }
-    }
-
-    public static class SomeUncheckedAppException extends RuntimeException {
-        private static final long serialVersionUID = 1L;
     }
 
     @Provider

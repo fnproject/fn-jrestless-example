@@ -1,5 +1,3 @@
-package com.oracle.faas.jrestlessexample;
-
 import com.jrestless.core.container.dpi.AbstractReferencingBinder;
 import com.jrestless.core.container.handler.SimpleRequestHandler;
 import com.jrestless.core.container.io.DefaultJRestlessContainerRequest;
@@ -21,6 +19,7 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.inject.Inject;
 import javax.inject.Provider;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
 import java.io.ByteArrayOutputStream;
@@ -43,34 +42,27 @@ public abstract class OracleFunctionsRequestHandler extends SimpleRequestHandler
     private static final URI BASE_ROOT_URI = URI.create("/");
     private static final Logger LOG = LoggerFactory.getLogger(OracleFunctionsRequestHandler.class);
     private RuntimeContext rctx;
-    private String defaultContentType = "applications/json";
-    private boolean success = true;
+    private String defaultContentType = MediaType.APPLICATION_JSON;
 
 
     @Override
-    protected JRestlessContainerRequest createContainerRequest(WrappedInput wrappedInput) {
+    public JRestlessContainerRequest createContainerRequest(WrappedInput wrappedInput) {
         InputEvent inputEvent = wrappedInput.inputEvent;
         InputStream entityStream = wrappedInput.stream;
 
         requireNonNull(inputEvent);
 
-        String httpMethod = inputEvent.getMethod();
-
-        RequestAndBaseUri requestAndBaseUri = getRequestAndBaseUri(inputEvent);
-
-        DefaultJRestlessContainerRequest container = new DefaultJRestlessContainerRequest(
-                requestAndBaseUri,
-                httpMethod,
+        return new DefaultJRestlessContainerRequest(
+                getRequestAndBaseUri(inputEvent),
+                inputEvent.getMethod(),
                 entityStream,
                 this.expandHeaders(inputEvent.getHeaders().getAll()));
-
-        return container;
     }
 
     //TODO: Add to when routes aquire the ability to have wildcards e.g. 'String basePath = getBasePathUri(inputEvent)'
     //TODO: Test that this doesn't only work locally!!!
     @Nonnull
-    protected RequestAndBaseUri getRequestAndBaseUri(@Nonnull InputEvent inputEvent){
+    public RequestAndBaseUri getRequestAndBaseUri(@Nonnull InputEvent inputEvent){
         URI baseUri;
         URI baseUriWithoutBasePath;
         UriBuilder baseUriBuilder;
@@ -213,14 +205,13 @@ public abstract class OracleFunctionsRequestHandler extends SimpleRequestHandler
             // See JRestlessHandlerContainer class for more details
             String responseBody = ((ByteArrayOutputStream) outputStream).toString(StandardCharsets.UTF_8.name());
             String contentType = headers.getOrDefault("Content-Type", Collections.singletonList(defaultContentType)).get(0);
-            OutputEvent outputEvent = OutputEvent.fromBytes(responseBody.getBytes(), success, contentType);
+            OutputEvent outputEvent = OutputEvent.fromBytes(responseBody.getBytes(), true, contentType);
             response = new WrappedOutput(outputEvent, responseBody, statusType);
         }
     }
 
     @Override
     protected WrappedOutput onRequestFailure(Exception e, WrappedInput wrappedInput, @Nullable JRestlessContainerRequest jRestlessContainerRequest) {
-        LOG.error("request failed", e);
         System.err.println("request failed" + e.getMessage());
         e.printStackTrace();
         OutputEvent outputEvent = OutputEvent.emptyResult(false);
@@ -234,24 +225,24 @@ public abstract class OracleFunctionsRequestHandler extends SimpleRequestHandler
         this.rctx = rctx;
     }
 
-    static class WrappedInput {
+    public static class WrappedInput {
         final InputEvent inputEvent;
         final InputStream stream;
 
-        WrappedInput(InputEvent inputEvent, InputStream stream) {
+        public WrappedInput(InputEvent inputEvent, InputStream stream) {
             this.inputEvent = inputEvent;
             this.stream = stream;
         }
     }
 
-    static class WrappedOutput {
-        final OutputEvent outputEvent;
+    public static class WrappedOutput {
+        public final OutputEvent outputEvent;
         @Deprecated // This is not available to the user yet
-        final String body;
+        public final String body;
         @Deprecated // The functions platform prevents the setting of a non-200 result (or 500 in the case of an external platform error)
-        final int statusCode;
+        public final int statusCode;
 
-        WrappedOutput(@Nonnull OutputEvent outputEvent, @Nullable String body, @Nonnull Response.StatusType statusType){
+        public WrappedOutput(@Nonnull OutputEvent outputEvent, @Nullable String body, @Nonnull Response.StatusType statusType){
             requireNonNull(statusType);
             this.statusCode = statusType.getStatusCode();
             this.body = body;

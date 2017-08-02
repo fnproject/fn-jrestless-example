@@ -1,5 +1,3 @@
-package com.oracle.faas.jrestlessexample;
-
 public class BlogPost {
     private String date;
     private String author;

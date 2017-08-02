@@ -1,5 +1,3 @@
-package com.oracle.faas.jrestlessexample;
-
 import com.oracle.faas.api.InputEvent;
 import com.oracle.faas.api.OutputEvent;
 

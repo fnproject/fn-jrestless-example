@@ -1,8 +1,6 @@
-package com.oracle.faas.jrestlessexample;
-
 import com.oracle.faas.api.InputEvent;
 
-public class OracleFunctionsTestObjectHandler extends OracleFunctionsRequestHandler{
+public class OracleFunctionsTestObjectHandler extends OracleFunctionsRequestHandler {
 
     protected OracleFunctionsTestObjectHandler(){
 

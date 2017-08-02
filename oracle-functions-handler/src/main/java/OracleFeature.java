@@ -1,5 +1,3 @@
-package com.oracle.faas.jrestlessexample;
-
 import com.jrestless.core.filter.ApplicationPathFilter;
 
 import javax.ws.rs.core.Feature;

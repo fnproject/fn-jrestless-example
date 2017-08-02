@@ -1,5 +1,3 @@
-package com.oracle.faas.jrestlessexample;
-
 import com.jrestless.core.container.JRestlessHandlerContainer;
 import com.jrestless.core.container.io.JRestlessContainerRequest;
 import com.jrestless.core.container.io.RequestAndBaseUri;
@@ -143,7 +141,6 @@ public class OracleFunctionsRequestHandlerTest {
         assertEquals("", toString((ByteArrayInputStream) (containerRequest.getEntityStream())));
     }
 
-    //TODO: test baseUri when Host is passed in as a header
     @Test
     public void getRequestAndBaseUri_FallbackBaseUriUsed_ShouldMakeBasePath() {
         URI baseUri = URI.create("/");
@@ -230,7 +227,7 @@ public class OracleFunctionsRequestHandlerTest {
 
     }
 
-    public static String toString(ByteArrayInputStream bais) {
+    private static String toString(ByteArrayInputStream bais) {
         int size = bais.available();
         char[] chars = new char[size];
         byte[] bytes = new byte[size];
