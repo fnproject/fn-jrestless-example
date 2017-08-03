@@ -1,6 +1,7 @@
 package com.oracle.jfaas.jrestless;
 
 import com.jrestless.core.container.JRestlessHandlerContainer;
+import com.jrestless.core.container.handler.SimpleRequestHandler;
 import com.jrestless.core.container.io.JRestlessContainerRequest;
 import com.jrestless.core.container.io.RequestAndBaseUri;
 import com.oracle.faas.api.Headers;
@@ -8,12 +9,16 @@ import com.oracle.faas.api.InputEvent;
 import com.oracle.faas.runtime.HeadersImpl;
 import com.oracle.faas.runtime.QueryParametersImpl;
 import com.oracle.faas.runtime.ReadOnceInputEvent;
-import com.oracle.jfaas.jrestless.OracleFunctionsRequestHandler;
 import jersey.repackaged.com.google.common.collect.ImmutableMap;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.net.URI;
 import java.util.*;
 
@@ -21,7 +26,6 @@ import static java.util.Collections.singletonList;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.mock;
 
-//TODO: Add response writer tests
 public class OracleFunctionsRequestHandlerTest {
     private JRestlessHandlerContainer<JRestlessContainerRequest> container;
     private OracleFunctionsRequestHandler requestHandler;
@@ -220,7 +224,22 @@ public class OracleFunctionsRequestHandlerTest {
         assertEquals(reqUri, requestAndBaseUri.getRequestUri());
     }
 
+    @Test
+    public void testResponseWriter_WithoutContentHeader_ShouldDefaultToApplicationJson() throws IOException {
+        Map<String, List<String>> headers = new HashMap<>();
+        SimpleRequestHandler.SimpleResponseWriter<OracleFunctionsRequestHandler.WrappedOutput> responseWriter = requestHandler.createResponseWriter(null);
+        responseWriter.writeResponse(Response.Status.OK, headers, new ByteArrayOutputStream());
+        Assert.assertTrue(responseWriter.getResponse().outputEvent.getContentType().get().equals(MediaType.APPLICATION_JSON));
+    }
 
+    @Test
+    public void testResponseWriter_WithContentHeader_ShouldUseContentHeaderGiven() throws IOException {
+        Map<String, List<String>> headers = new HashMap<>();
+        headers.put("Content-Type", Collections.singletonList(MediaType.TEXT_HTML));
+        SimpleRequestHandler.SimpleResponseWriter<OracleFunctionsRequestHandler.WrappedOutput> responseWriter = requestHandler.createResponseWriter(null);
+        responseWriter.writeResponse(Response.Status.OK, headers, new ByteArrayOutputStream());
+        Assert.assertTrue(responseWriter.getResponse().outputEvent.getContentType().get().equals(MediaType.TEXT_HTML));
+    }
 
     private static class DefaultOracleFunctionsRequestHandler extends OracleFunctionsRequestHandler{
         DefaultOracleFunctionsRequestHandler(JRestlessHandlerContainer<JRestlessContainerRequest> container){
