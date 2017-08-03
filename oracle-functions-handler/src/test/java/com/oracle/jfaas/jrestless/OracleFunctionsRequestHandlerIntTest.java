@@ -25,10 +25,7 @@ import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
-import javax.ws.rs.ext.ExceptionMapper;
-import javax.ws.rs.ext.Provider;
 import java.io.ByteArrayInputStream;
-import java.io.FileNotFoundException;
 import java.net.URI;
 import java.util.HashMap;
 import java.util.Map;
@@ -56,9 +53,6 @@ public class OracleFunctionsRequestHandlerIntTest {
         config.register(binder);
         config.register(TestResource.class);
         config.register(ApplicationPathFilter.class);
-        config.register(SomeCheckedAppExceptionMapper.class);
-        config.register(SomeUncheckedAppExceptionMapper.class);
-        config.register(GlobalExceptionMapper.class);
         OracleFunctionsRequestObjectHandler handler = new OracleFunctionsRequestObjectHandler();
         handler.init(config);
         handler.start();
@@ -173,7 +167,7 @@ public class OracleFunctionsRequestHandlerIntTest {
         assertEquals(MediaType.APPLICATION_JSON, outputEvent.getContentType().get());
     }
 
-    public interface TestService{
+    private interface TestService{
         void injectRuntimeContext(RuntimeContext context);
         void injectInputEvent(InputEvent request);
         void baseUri(URI baseUri);
@@ -218,37 +212,13 @@ public class OracleFunctionsRequestHandlerIntTest {
             service.baseUri(uriInfo.getBaseUri());
             service.requestUri(uriInfo.getRequestUri());
         }
-
-        @Path("specific-checked-exception")
-        @GET
-        public void throwSpecificCheckedException() throws SomeCheckedAppException {
-            throw new SomeCheckedAppException();
-        }
-
-        @Path("specific-unchecked-exception")
-        @GET
-        public void throwSpecificUncheckedException() {
-            throw new SomeUncheckedAppException();
-        }
-
-        @Path("unspecific-checked-exception")
-        @GET
-        public void throwUnspecificCheckedException() throws FileNotFoundException {
-            throw new FileNotFoundException();
-        }
-
-        @Path("unspecific-unchecked-exception")
-        @GET
-        public void throwUnspecificUncheckedException() {
-            throw new RuntimeException();
-        }
     }
 
-    public static class AnObject {
+    private static class AnObject {
         private String value;
 
         @JsonCreator
-        public AnObject(@JsonProperty("value") String value) {
+        private AnObject(@JsonProperty("value") String value) {
             this.value = value;
         }
 
@@ -261,46 +231,7 @@ public class OracleFunctionsRequestHandlerIntTest {
     public static class ApiResourceConfig extends ResourceConfig {
     }
 
-    public static class SomeCheckedAppException extends Exception {
-        private static final long serialVersionUID = 1L;
-    }
 
-
-    public static class SomeUncheckedAppException extends RuntimeException {
-        private static final long serialVersionUID = 1L;
-    }
-
-    @Provider
-    public static class SomeCheckedAppExceptionMapper implements ExceptionMapper<SomeCheckedAppException> {
-        @Override
-        public Response toResponse(SomeCheckedAppException exception) {
-            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-                    .entity(SomeCheckedAppExceptionMapper.class.getSimpleName()).build();
-        }
-    }
-
-    @Provider
-    public static class SomeUncheckedAppExceptionMapper implements ExceptionMapper<SomeUncheckedAppException> {
-        @Override
-        public Response toResponse(SomeUncheckedAppException exception) {
-            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-                    .entity(SomeUncheckedAppExceptionMapper.class.getSimpleName()).build();
-        }
-    }
-
-    @Provider
-    public static class GlobalExceptionMapper implements ExceptionMapper<Exception> {
-        @Override
-        public Response toResponse(Exception exception) {
-            if(exception instanceof WebApplicationException) {
-                WebApplicationException wae = (WebApplicationException) exception;
-                return wae.getResponse();
-            }
-
-            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(GlobalExceptionMapper.class.getSimpleName())
-                    .build();
-        }
-    }
 }
 
 
