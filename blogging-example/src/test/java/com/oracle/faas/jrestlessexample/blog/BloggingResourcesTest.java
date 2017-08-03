@@ -1,3 +1,5 @@
+package com.oracle.faas.jrestlessexample.blog;
+
 import com.oracle.faas.testing.FnTesting;
 import org.apache.commons.io.IOUtils;
 import org.junit.Assert;

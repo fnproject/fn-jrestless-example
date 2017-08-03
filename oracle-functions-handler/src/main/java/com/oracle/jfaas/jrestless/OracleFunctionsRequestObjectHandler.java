@@ -1,3 +1,5 @@
+package com.oracle.jfaas.jrestless;
+
 import com.oracle.faas.api.InputEvent;
 import com.oracle.faas.api.OutputEvent;
 

@@ -91,9 +91,6 @@
         font: 15px system-ui;
     }
 
-    .post { color: white; height: 0; }
-    .added { color: black; height: inherit; }
-
 
 </style>
 
@@ -116,7 +113,6 @@
 <script>
     var formPost = function( aPost ) {
         var thePostDiv = document.createElement("div");
-        thePostDiv.className = "post"
 
         var theTitle = document.createElement("h2");
         theTitle.innerHTML = aPost.title;
@@ -140,7 +136,6 @@
         var theListDiv = document.getElementById("posts-go-in-here");
         theListDiv.insertBefore(thePostDiv, theListDiv.firstChild);
 
-        thePostDiv.className = "post added"
     }
 
     var fetchAllPosts = function(){

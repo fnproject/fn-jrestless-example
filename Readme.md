@@ -96,11 +96,11 @@ package com.example.faas;
 
 import org.glassfish.jersey.server.ResourceConfig;
 
-public class RequestHandler extends OracleFunctionsRequestObjectHandler {
+public class RequestHandler extends com.oracle.jfaas.jrestless.OracleFunctionsRequestObjectHandler {
   public RequestHandler() {
     // initialize the container with your resource configuration
     ResourceConfig config = new ResourceConfig()
-      .register(OracleFeature.class)
+      .register(com.oracle.jfaas.jrestless.OracleFeature.class)
       .packages("com.example.faas");
     init(config);
     // start the container
@@ -109,7 +109,7 @@ public class RequestHandler extends OracleFunctionsRequestObjectHandler {
 }
 ```
 
-At the moment as Oracle Functions is not currently integrated into jrestless for this to work the package com.example.faas also needs the classes; [OracleFunctionsRequestObjectHandler](https://gitlab-odx.oracle.com/odx/jrestless-jfaas/blob/master/src/main/java/com/oracle/faas/jrestlessexample/OracleFunctionsRequestObjectHandler.java), [OracleFunctionsRequestHandler](https://gitlab-odx.oracle.com/odx/jrestless-jfaas/blob/master/src/main/java/com/oracle/faas/jrestlessexample/OracleFunctionsRequestHandler.java) and [OracleFeature](https://gitlab-odx.oracle.com/odx/jrestless-jfaas/blob/master/src/main/java/com/oracle/faas/jrestlessexample/OracleFeature.java).
+At the moment as Oracle Functions is not currently integrated into jrestless for this to work the package com.example.faas also needs the classes; [com.oracle.jfaas.jrestless.OracleFunctionsRequestObjectHandler](https://gitlab-odx.oracle.com/odx/jrestless-jfaas/blob/master/src/main/java/com/oracle/faas/jrestlessexample/com.oracle.jfaas.jrestless.OracleFunctionsRequestObjectHandler.java), [com.oracle.jfaas.jrestless.OracleFunctionsRequestHandler](https://gitlab-odx.oracle.com/odx/jrestless-jfaas/blob/master/src/main/java/com/oracle/faas/jrestlessexample/com.oracle.jfaas.jrestless.OracleFunctionsRequestHandler.java) and [com.oracle.jfaas.jrestless.OracleFeature](https://gitlab-odx.oracle.com/odx/jrestless-jfaas/blob/master/src/main/java/com/oracle/faas/jrestlessexample/com.oracle.jfaas.jrestless.OracleFeature.java).
 
 
 From here make sure you've got the Oracle Functions Server up and running ([Quickstart](https://github.com/fnproject/fn#quickstart)).

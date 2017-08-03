@@ -1,3 +1,5 @@
+package com.oracle.jfaas.jrestless;
+
 import com.jrestless.core.container.dpi.AbstractReferencingBinder;
 import com.jrestless.core.container.handler.SimpleRequestHandler;
 import com.jrestless.core.container.io.DefaultJRestlessContainerRequest;
@@ -59,8 +61,6 @@ public abstract class OracleFunctionsRequestHandler extends SimpleRequestHandler
                 this.expandHeaders(inputEvent.getHeaders().getAll()));
     }
 
-    //TODO: Add to when routes aquire the ability to have wildcards e.g. 'String basePath = getBasePathUri(inputEvent)'
-    //TODO: Test that this doesn't only work locally!!!
     @Nonnull
     public RequestAndBaseUri getRequestAndBaseUri(@Nonnull InputEvent inputEvent){
         URI baseUri;
@@ -117,13 +117,13 @@ public abstract class OracleFunctionsRequestHandler extends SimpleRequestHandler
         Map<String, List<String>> theHeaders = new HashMap<>();
         for (Map.Entry<String, String> e : headers.entrySet()){
             if(e.getKey() != null && e.getValue() != null){
-                theHeaders.put(unMangleKey(e.getKey()), Collections.singletonList(e.getValue()));
+                theHeaders.put(formatKey(e.getKey()), Collections.singletonList(e.getValue()));
             }
         }
         return theHeaders;
     }
 
-    private String unMangleKey(String key) {
+    private String formatKey(String key) {
         return key.toLowerCase().replace('_', '-');
     }
 
@@ -198,7 +198,6 @@ public abstract class OracleFunctionsRequestHandler extends SimpleRequestHandler
             return new ByteArrayOutputStream();
         }
 
-        //TODO: When should success be false?
         @Override
         public void writeResponse(@Nonnull Response.StatusType statusType, @Nonnull Map<String, List<String>> headers, @Nonnull OutputStream outputStream) throws IOException {
             // NOTE: This is a safe cast as it is set to a ByteArrayOutputStream by getEntityOutputStream

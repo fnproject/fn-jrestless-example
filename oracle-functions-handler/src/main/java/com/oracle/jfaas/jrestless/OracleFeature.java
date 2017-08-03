@@ -1,3 +1,5 @@
+package com.oracle.jfaas.jrestless;
+
 import com.jrestless.core.filter.ApplicationPathFilter;
 
 import javax.ws.rs.core.Feature;

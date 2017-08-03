@@ -1,3 +1,5 @@
+package com.oracle.jfaas.jrestless;
+
 import com.jrestless.core.container.JRestlessHandlerContainer;
 import com.jrestless.core.container.io.JRestlessContainerRequest;
 import com.jrestless.core.container.io.RequestAndBaseUri;
@@ -6,6 +8,7 @@ import com.oracle.faas.api.InputEvent;
 import com.oracle.faas.runtime.HeadersImpl;
 import com.oracle.faas.runtime.QueryParametersImpl;
 import com.oracle.faas.runtime.ReadOnceInputEvent;
+import com.oracle.jfaas.jrestless.OracleFunctionsRequestHandler;
 import jersey.repackaged.com.google.common.collect.ImmutableMap;
 import org.junit.Before;
 import org.junit.Test;
@@ -70,7 +73,7 @@ public class OracleFunctionsRequestHandlerTest {
                 new QueryParametersImpl());
         OracleFunctionsRequestHandler.WrappedInput wrappedInput = new OracleFunctionsRequestHandler.WrappedInput(inputEvent, defaultBody);
         JRestlessContainerRequest containerRequest = requestHandler.createContainerRequest(wrappedInput);
-        assertEquals(ImmutableMap.of(unMangleKey("key_one"), singletonList("value_one"), unMangleKey("key_two"), singletonList("value_two")), containerRequest.getHeaders());
+        assertEquals(ImmutableMap.of("key-one", singletonList("value_one"), "key-two", singletonList("value_two")), containerRequest.getHeaders());
     }
 
     @Test
@@ -106,7 +109,7 @@ public class OracleFunctionsRequestHandlerTest {
                 new QueryParametersImpl());
         OracleFunctionsRequestHandler.WrappedInput wrappedInput = new OracleFunctionsRequestHandler.WrappedInput(inputEvent, defaultBody);
         JRestlessContainerRequest containerRequest = requestHandler.createContainerRequest(wrappedInput);
-        assertEquals(ImmutableMap.of(unMangleKey("key_two"), singletonList("value_two")), containerRequest.getHeaders());
+        assertEquals(ImmutableMap.of("key-two", singletonList("value_two")), containerRequest.getHeaders());
     }
 
     @Test
@@ -237,9 +240,5 @@ public class OracleFunctionsRequestHandlerTest {
             chars[i] = (char) (bytes[i++] & 0xff);
 
         return new String(chars);
-    }
-
-    private String unMangleKey(String key) {
-        return key.toLowerCase().replace('_', '-');
     }
 }
