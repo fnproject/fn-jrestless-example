@@ -7,6 +7,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jrestless.core.container.dpi.InstanceBinder;
 import com.jrestless.core.filter.ApplicationPathFilter;
 import com.oracle.faas.api.InputEvent;
+import com.oracle.faas.api.OutputEvent;
 import com.oracle.faas.api.RuntimeContext;
 import com.oracle.faas.runtime.HeadersImpl;
 import com.oracle.faas.runtime.QueryParametersImpl;
@@ -38,7 +39,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 
 public class OracleFunctionsRequestHandlerIntTest {
-    private OracleFunctionsTestObjectHandler handler;
+    private OracleFunctionsRequestObjectHandler handler;
     private TestService testService;
     private RuntimeContext runtimeContext = mock(RuntimeContext.class);
     private ByteArrayInputStream defaultBody;
@@ -50,7 +51,7 @@ public class OracleFunctionsRequestHandlerIntTest {
         defaultBody = new ByteArrayInputStream(new byte[]{});
     }
 
-    private OracleFunctionsTestObjectHandler createAndStartHandler(ResourceConfig config, TestService testService) {
+    private OracleFunctionsRequestObjectHandler createAndStartHandler(ResourceConfig config, TestService testService) {
         Binder binder = new InstanceBinder.Builder().addInstance(testService, TestService.class).build();
         config.register(binder);
         config.register(TestResource.class);
@@ -58,7 +59,7 @@ public class OracleFunctionsRequestHandlerIntTest {
         config.register(SomeCheckedAppExceptionMapper.class);
         config.register(SomeUncheckedAppExceptionMapper.class);
         config.register(GlobalExceptionMapper.class);
-        OracleFunctionsTestObjectHandler handler = new OracleFunctionsTestObjectHandler();
+        OracleFunctionsRequestObjectHandler handler = new OracleFunctionsRequestObjectHandler();
         handler.init(config);
         handler.start();
         handler.setRuntimeContext(runtimeContext);
@@ -92,27 +93,6 @@ public class OracleFunctionsRequestHandlerIntTest {
     }
 
     @Test
-    public void testRoundTrip() throws JsonProcessingException {
-        ObjectMapper mapper = new ObjectMapper();
-        Map<String, String> inputHeaders = ImmutableMap.of(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON,
-                HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON);
-        String contents = mapper.writeValueAsString(new AnObject("123"));
-        ByteArrayInputStream body = new ByteArrayInputStream(contents.getBytes());
-
-        InputEvent inputEvent = new ReadOnceInputEvent("myApp",
-                "/round-trip",
-                "www.example.com",
-                "POST",
-                body,
-                new HeadersImpl(inputHeaders),
-                new QueryParametersImpl());
-        OracleFunctionsRequestHandler.WrappedOutput wrappedOutput = handler.handleRequest(inputEvent);
-
-        assertEquals(200, wrappedOutput.statusCode);
-        assertEquals(contents, wrappedOutput.body);
-    }
-
-    @Test
     public void testBaseUriWithoutHost() {
         InputEvent inputEvent = new ReadOnceInputEvent("myApp",
                 "/uris",
@@ -143,7 +123,7 @@ public class OracleFunctionsRequestHandlerIntTest {
 
     @Test
     public void testAppPathWithoutHost() {
-        OracleFunctionsTestObjectHandler handlerWithAppPath = createAndStartHandler(new ApiResourceConfig(), testService);
+        OracleFunctionsRequestObjectHandler handlerWithAppPath = createAndStartHandler(new ApiResourceConfig(), testService);
         InputEvent inputEvent = new ReadOnceInputEvent("myApp",
                 "/api/uris",
                 "www.example.com",
@@ -159,7 +139,7 @@ public class OracleFunctionsRequestHandlerIntTest {
     @Test
     public void testAppPathWithHost() {
         Map<String, String> inputHeaders = ImmutableMap.of(HttpHeaders.HOST, "www.example.com");
-        OracleFunctionsTestObjectHandler handlerWithAppPath = createAndStartHandler(new ApiResourceConfig(), testService);
+        OracleFunctionsRequestObjectHandler handlerWithAppPath = createAndStartHandler(new ApiResourceConfig(), testService);
         InputEvent inputEvent = new ReadOnceInputEvent("myApp",
                 "/api/uris",
                 "www.example.com",
@@ -172,54 +152,25 @@ public class OracleFunctionsRequestHandlerIntTest {
         verify(testService).requestUri(URI.create("https://www.example.com/api/uris"));
     }
 
+    // Note: There is a better version of this test in OracleFunctionsFutureRequestHandlerTest
     @Test
-    public void testSpecificCheckedException() {
-        testException("/specific-checked-exception", SomeCheckedAppExceptionMapper.class);
-    }
+    public void testRoundTripBasic() throws JsonProcessingException {
+        ObjectMapper mapper = new ObjectMapper();
+        Map<String, String> inputHeaders = ImmutableMap.of(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON,
+                HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON);
+        String contents = mapper.writeValueAsString(new OracleFunctionsRequestHandlerIntTest.AnObject("123"));
+        ByteArrayInputStream body = new ByteArrayInputStream(contents.getBytes());
 
-    @Test
-    public void testSpecificUncheckedException() {
-        testException("/specific-unchecked-exception", SomeUncheckedAppExceptionMapper.class);
-    }
-
-    @Test
-    public void testUnspecificCheckedException() {
-        testException("/unspecific-checked-exception", GlobalExceptionMapper.class);
-    }
-
-    @Test
-    public void testUnspecificUncheckedException() {
-        testException("/unspecific-unchecked-exception", GlobalExceptionMapper.class);
-    }
-
-    private void testException(String resource, Class<? extends ExceptionMapper<?>> exceptionMapper) {
         InputEvent inputEvent = new ReadOnceInputEvent("myApp",
-                resource,
+                "/round-trip",
                 "www.example.com",
-                "GET",
-                defaultBody,
-                new HeadersImpl(new HashMap<>()),
+                "POST",
+                body,
+                new HeadersImpl(inputHeaders),
                 new QueryParametersImpl());
+        OutputEvent outputEvent = handler.handleRequest(inputEvent);
 
-        OracleFunctionsRequestHandler.WrappedOutput wrappedOutput = handler.handleRequest(inputEvent);
-        assertEquals(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(), wrappedOutput.statusCode);
-        assertEquals(exceptionMapper.getSimpleName(), wrappedOutput.body);
-    }
-
-    // Note: This is a feature that is yet to be implemented in the Functions platform
-    // The Functions platform currently only returns status codes of 200 or 500
-    @Test
-    public void testIncorrectRoute() {
-        InputEvent inputEvent = new ReadOnceInputEvent("myApp",
-                "/unspecified/route",
-                "www.example.com",
-                "GET",
-                defaultBody,
-                new HeadersImpl(new HashMap<>()),
-                new QueryParametersImpl());
-
-        OracleFunctionsRequestHandler.WrappedOutput wrappedOutput = handler.handleRequest(inputEvent);
-        assertEquals(404, wrappedOutput.statusCode);
+        assertEquals(MediaType.APPLICATION_JSON, outputEvent.getContentType().get());
     }
 
     public interface TestService{
