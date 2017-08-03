@@ -217,11 +217,17 @@ public abstract class OracleFunctionsRequestHandler extends SimpleRequestHandler
         return new WrappedOutput(outputEvent, null, Response.Status.INTERNAL_SERVER_ERROR);
     }
 
-
-
     @FnConfiguration
     public void setRuntimeContext(RuntimeContext rctx){
         this.rctx = rctx;
+    }
+
+    public OutputEvent handleRequest(InputEvent inputEvent){
+        return inputEvent.consumeBody((inputStream) -> {
+            WrappedInput wrappedInput = new WrappedInput(inputEvent, inputStream);
+            WrappedOutput response = this.delegateRequest(wrappedInput);
+            return response.outputEvent;
+        });
     }
 
     public static class WrappedInput {

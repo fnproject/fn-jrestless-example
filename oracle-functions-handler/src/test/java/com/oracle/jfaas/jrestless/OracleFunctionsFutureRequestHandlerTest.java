@@ -84,7 +84,7 @@ public class OracleFunctionsFutureRequestHandlerTest {
                 body,
                 new HeadersImpl(inputHeaders),
                 new QueryParametersImpl());
-        OracleFunctionsRequestHandler.WrappedOutput wrappedOutput = handler.handleRequest(inputEvent);
+        OracleFunctionsRequestHandler.WrappedOutput wrappedOutput = handler.handleTestRequest(inputEvent);
 
         assertEquals(200, wrappedOutput.statusCode);
         assertEquals(contents, wrappedOutput.body);
@@ -102,7 +102,7 @@ public class OracleFunctionsFutureRequestHandlerTest {
                 new HeadersImpl(new HashMap<>()),
                 new QueryParametersImpl());
 
-        OracleFunctionsRequestHandler.WrappedOutput wrappedOutput = handler.handleRequest(inputEvent);
+        OracleFunctionsRequestHandler.WrappedOutput wrappedOutput = handler.handleTestRequest(inputEvent);
         assertEquals(404, wrappedOutput.statusCode);
     }
 
@@ -135,7 +135,7 @@ public class OracleFunctionsFutureRequestHandlerTest {
                 new HeadersImpl(new HashMap<>()),
                 new QueryParametersImpl());
 
-        OracleFunctionsRequestHandler.WrappedOutput wrappedOutput = handler.handleRequest(inputEvent);
+        OracleFunctionsRequestHandler.WrappedOutput wrappedOutput = handler.handleTestRequest(inputEvent);
         assertEquals(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(), wrappedOutput.statusCode);
         assertEquals(exceptionMapper.getSimpleName(), wrappedOutput.body);
     }

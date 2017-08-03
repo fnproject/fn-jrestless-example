@@ -117,7 +117,7 @@ public class OracleFunctionsRequestHandlerIntTest {
 
     @Test
     public void testAppPathWithoutHost() {
-        OracleFunctionsRequestObjectHandler handlerWithAppPath = createAndStartHandler(new ApiResourceConfig(), testService);
+        OracleFunctionsRequestHandler handlerWithAppPath = createAndStartHandler(new ApiResourceConfig(), testService);
         InputEvent inputEvent = new ReadOnceInputEvent("myApp",
                 "/api/uris",
                 "www.example.com",
@@ -133,7 +133,7 @@ public class OracleFunctionsRequestHandlerIntTest {
     @Test
     public void testAppPathWithHost() {
         Map<String, String> inputHeaders = ImmutableMap.of(HttpHeaders.HOST, "www.example.com");
-        OracleFunctionsRequestObjectHandler handlerWithAppPath = createAndStartHandler(new ApiResourceConfig(), testService);
+        OracleFunctionsRequestHandler handlerWithAppPath = createAndStartHandler(new ApiResourceConfig(), testService);
         InputEvent inputEvent = new ReadOnceInputEvent("myApp",
                 "/api/uris",
                 "www.example.com",
