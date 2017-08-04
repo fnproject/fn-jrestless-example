@@ -2,10 +2,9 @@ package com.oracle.faas.jrestlessexample.blog;
 
 import com.oracle.jfaas.jrestless.OracleFeature;
 import com.oracle.jfaas.jrestless.OracleFunctionsRequestHandler;
-import com.oracle.jfaas.jrestless.OracleFunctionsRequestObjectHandler;
 import org.glassfish.jersey.server.ResourceConfig;
 
-public class BloggingApp extends OracleFunctionsRequestObjectHandler {
+public class BloggingApp extends OracleFunctionsRequestHandler {
 
     public BloggingApp() {
 

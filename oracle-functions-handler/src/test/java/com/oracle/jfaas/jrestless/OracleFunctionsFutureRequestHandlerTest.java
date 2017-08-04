@@ -5,12 +5,8 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jrestless.core.container.dpi.InstanceBinder;
-import com.jrestless.core.filter.ApplicationPathFilter;
 import com.oracle.faas.api.InputEvent;
 import com.oracle.faas.api.RuntimeContext;
-import com.oracle.faas.runtime.HeadersImpl;
-import com.oracle.faas.runtime.QueryParametersImpl;
-import com.oracle.faas.runtime.ReadOnceInputEvent;
 import jersey.repackaged.com.google.common.collect.ImmutableMap;
 import org.glassfish.hk2.utilities.Binder;
 import org.glassfish.jersey.server.ResourceConfig;
@@ -29,13 +25,15 @@ import javax.ws.rs.ext.ExceptionMapper;
 import javax.ws.rs.ext.Provider;
 import java.io.ByteArrayInputStream;
 import java.io.FileNotFoundException;
-import java.util.HashMap;
 import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.mock;
 
+// Currently many of these features are not available in the functions platform
+// They are tested here so as to check that the current implementation of jrestless works as anticipated
 public class OracleFunctionsFutureRequestHandlerTest {
+    private String DOMAIN_WITH_SCHEME = "http://www.example.com";
     private OracleFunctionsTestObjectHandler handler;
     private TestService testService;
     private RuntimeContext runtimeContext = mock(RuntimeContext.class);
@@ -68,7 +66,7 @@ public class OracleFunctionsFutureRequestHandlerTest {
     }
 
     // Note: This test is important and though the features used to test it aren't currently available it should
-    // still work. Using WrappedInput makes testing this much easier.
+    // still work. Using WrappedOutput makes testing this much easier.
     @Test
     public void testRoundTrip() throws JsonProcessingException {
         ObjectMapper mapper = new ObjectMapper();
@@ -77,13 +75,12 @@ public class OracleFunctionsFutureRequestHandlerTest {
         String contents = mapper.writeValueAsString(new AnObject("123"));
         ByteArrayInputStream body = new ByteArrayInputStream(contents.getBytes());
 
-        InputEvent inputEvent = new ReadOnceInputEvent("myApp",
-                "/round-trip",
-                "www.example.com",
-                "POST",
-                body,
-                new HeadersImpl(inputHeaders),
-                new QueryParametersImpl());
+        InputEvent inputEvent = new DefaultInputEvent()
+                .setReqUrlAndRoute(DOMAIN_WITH_SCHEME + "/round-trip", "/round-trip")
+                .setMethod("POST")
+                .setHeaders(inputHeaders)
+                .setBody(body)
+                .getInputEvent();
         OracleFunctionsRequestHandler.WrappedOutput wrappedOutput = handler.handleTestRequest(inputEvent);
 
         assertEquals(200, wrappedOutput.statusCode);
@@ -94,13 +91,10 @@ public class OracleFunctionsFutureRequestHandlerTest {
     // The Functions platform currently only returns status codes of 200 or 500
     @Test
     public void testIncorrectRoute() {
-        InputEvent inputEvent = new ReadOnceInputEvent("myApp",
-                "/unspecified/route",
-                "www.example.com",
-                "GET",
-                defaultBody,
-                new HeadersImpl(new HashMap<>()),
-                new QueryParametersImpl());
+        InputEvent inputEvent = new DefaultInputEvent()
+                .setReqUrlAndRoute(DOMAIN_WITH_SCHEME + "/unspecified/route", "/unspecified/route")
+                .setMethod("GET")
+                .getInputEvent();
 
         OracleFunctionsRequestHandler.WrappedOutput wrappedOutput = handler.handleTestRequest(inputEvent);
         assertEquals(404, wrappedOutput.statusCode);
@@ -127,17 +121,26 @@ public class OracleFunctionsFutureRequestHandlerTest {
     }
 
     private void testException(String resource, Class<? extends ExceptionMapper<?>> exceptionMapper) {
-        InputEvent inputEvent = new ReadOnceInputEvent("myApp",
-                resource,
-                "www.example.com",
-                "GET",
-                defaultBody,
-                new HeadersImpl(new HashMap<>()),
-                new QueryParametersImpl());
+        InputEvent inputEvent = new DefaultInputEvent()
+                .setReqUrlAndRoute(DOMAIN_WITH_SCHEME + resource, resource)
+                .setMethod("GET")
+                .getInputEvent();
 
         OracleFunctionsRequestHandler.WrappedOutput wrappedOutput = handler.handleTestRequest(inputEvent);
         assertEquals(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(), wrappedOutput.statusCode);
         assertEquals(exceptionMapper.getSimpleName(), wrappedOutput.body);
+    }
+
+    @Test
+    public void testOnRequestFailureWithWrappedOutput() {
+        OracleFunctionsRequestHandler.WrappedInput wrappedInput = new OracleFunctionsRequestHandler.WrappedInput(
+                new DefaultInputEvent().getInputEvent(),
+                new ByteArrayInputStream(new byte[]{}));
+        RuntimeException exception = new RuntimeException("Testing that onRequestFailure works");
+
+        OracleFunctionsRequestHandler.WrappedOutput output = handler.onRequestFailure(exception, wrappedInput, null);
+        assertEquals(null, output.body);
+        assertEquals(500, output.statusCode);
     }
 
     @Path("/")

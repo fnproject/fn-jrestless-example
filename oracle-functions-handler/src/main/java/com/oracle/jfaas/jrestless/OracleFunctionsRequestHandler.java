@@ -14,10 +14,7 @@ import org.glassfish.hk2.utilities.Binder;
 import org.glassfish.jersey.internal.inject.ReferencingFactory;
 import org.glassfish.jersey.internal.util.collection.Ref;
 import org.glassfish.jersey.server.ContainerRequest;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.inject.Inject;
 import javax.inject.Provider;
@@ -38,15 +35,20 @@ import java.util.Map;
 
 import static java.util.Objects.requireNonNull;
 
+/**
+ * Oracle Functions Request Handler
+ */
 public abstract class OracleFunctionsRequestHandler extends SimpleRequestHandler<OracleFunctionsRequestHandler.WrappedInput, OracleFunctionsRequestHandler.WrappedOutput> {
     private static final Type INPUT_EVENT_TYPE = (new TypeLiteral<Ref<InputEvent>>() { }).getType();
     private static final Type RUNTIME_CONTEXT_TYPE = (new TypeLiteral<Ref<RuntimeContext>>() { }).getType();
-    private static final URI BASE_ROOT_URI = URI.create("/");
-    private static final Logger LOG = LoggerFactory.getLogger(OracleFunctionsRequestHandler.class);
     private RuntimeContext rctx;
     private String defaultContentType = MediaType.APPLICATION_JSON;
 
 
+    /**
+     * Creates the JRestlessContainerRequest which is then handled by
+     * {@link com.jrestless.core.container.handler delegateRequest}
+     */
     @Override
     public JRestlessContainerRequest createContainerRequest(WrappedInput wrappedInput) {
         InputEvent inputEvent = wrappedInput.inputEvent;
@@ -61,107 +63,91 @@ public abstract class OracleFunctionsRequestHandler extends SimpleRequestHandler
                 this.expandHeaders(inputEvent.getHeaders().getAll()));
     }
 
-    @Nonnull
-    public RequestAndBaseUri getRequestAndBaseUri(@Nonnull InputEvent inputEvent){
-        URI baseUri;
-        URI baseUriWithoutBasePath;
-        UriBuilder baseUriBuilder;
-        try {
-            String host = getHost(inputEvent);
-            boolean hostPresent = !isBlank(host);
-            if(!hostPresent) {
-                LOG.warn("No host header available; using baseUri=/ as fallback");
-                baseUriBuilder = UriBuilder.fromUri(BASE_ROOT_URI);
-            } else {
-                baseUriBuilder = UriBuilder.fromUri("https://" + host);
-            }
-
-            baseUriWithoutBasePath = baseUriBuilder.build();
-            if(hostPresent) {
-                baseUriBuilder.path("/");
-            }
-            baseUri = baseUriBuilder.build();
-        } catch (RuntimeException e) {
-            LOG.error("baseUriCreationFailure; using baseUri=/ as fallback", e);
-            baseUri = BASE_ROOT_URI;
-            baseUriWithoutBasePath = baseUri;
-        }
-
-        baseUriBuilder = UriBuilder.fromUri(baseUriWithoutBasePath).path(inputEvent.getRoute());
-        addQueryParametersIfAvailable(baseUriBuilder, inputEvent);
-        return new RequestAndBaseUri(baseUri, baseUriBuilder.build());
-    }
-
-    private static boolean isBlank(String s) {
-        return (s == null) || s.trim().isEmpty();
-    }
-
-    private static String getHost(InputEvent inputEvent){
-        Map<String, String> headers = inputEvent.getHeaders().getAll();
-        if (headers == null) {
-            return null;
-        }
-        return headers.get("Host");
-    }
-
-    private static void addQueryParametersIfAvailable(UriBuilder uriBuilder, InputEvent inputEvent) {
-        Map<String, List<String>> queryStrings = inputEvent.getQueryParameters().getAll();
-        for (Map.Entry<String, List<String>> queryStringEntry : queryStrings.entrySet()) {
-            for (String value : queryStringEntry.getValue()){
-                uriBuilder.queryParam(queryStringEntry.getKey(), value);
-            }
-        }
-    }
-
     private Map<String, List<String>> expandHeaders(Map<String, String> headers) {
         Map<String, List<String>> theHeaders = new HashMap<>();
-        for (Map.Entry<String, String> e : headers.entrySet()){
-            if(e.getKey() != null && e.getValue() != null){
+        for (Map.Entry<String, String> e : headers.entrySet()) {
+            if (e.getKey() != null && e.getValue() != null) {
                 theHeaders.put(formatKey(e.getKey()), Collections.singletonList(e.getValue()));
             }
         }
         return theHeaders;
     }
 
+    /**
+     * Returns the base and request URI for this request.
+     * <p>
+     *  The base Uri is constructed from the domain and path minus the route
+     *  i.e. a request Uri "http://localhost:8080/r/app/route" will have a base Uri "http://localhost:8080/r/app/"
+     *
+     *  The request Uri is taken from {@code inputEvent.getRequestUrl()}
+     *
+     * @param inputEvent    The inputEvent given by the functions platform
+     * @return the base and request URI for this request
+     */
+    public RequestAndBaseUri getRequestAndBaseUri(InputEvent inputEvent) {
+        URI baseUri;
+        String route = inputEvent.getRoute();
+        URI requestUri = URI.create(inputEvent.getRequestUrl());
+        String path = requestUri.getPath();
+
+        if (!path.endsWith(route)) {
+            throw new IllegalStateException("Should have a valid route in the Uri");
+        }
+        String split = path.substring(0, path.length() - route.length());
+        baseUri = UriBuilder.fromUri(requestUri).replacePath(split + "/").replaceQuery(null).build();
+
+        return new RequestAndBaseUri(baseUri, requestUri);
+    }
+
+    // Note: The functions platform currently will only give '_' characters so this must be reformatted
     private String formatKey(String key) {
         return key.toLowerCase().replace('_', '-');
     }
 
+    /**
+     * Hook that allows you to extend the actual containerRequest passed to the Jersey container
+     */
     @Override
-    protected void extendActualJerseyContainerRequest(ContainerRequest actualContainerRequest, JRestlessContainerRequest containerRequest, WrappedInput wrappedInput){
+    protected void extendActualJerseyContainerRequest(ContainerRequest actualContainerRequest, JRestlessContainerRequest containerRequest, WrappedInput wrappedInput) {
         InputEvent event = wrappedInput.inputEvent;
         actualContainerRequest.setRequestScopedInitializer(locator -> {
             Ref<InputEvent> inputEventRef = locator
                     .<Ref<InputEvent>>getService(INPUT_EVENT_TYPE);
-            if (inputEventRef != null){
+            if (inputEventRef != null) {
                 inputEventRef.set(event);
-            } else {
-                System.err.println("InputEvent injection will not work");
-                LOG.error("InputEvent injection will not work");
             }
-
             Ref<RuntimeContext> contextRef = locator
                     .<Ref<RuntimeContext>>getService(RUNTIME_CONTEXT_TYPE);
-            if (contextRef != null){
+            if (contextRef != null) {
                 contextRef.set(rctx);
-            } else {
-                System.err.println("RuntimeContext injection will not work");
-                LOG.error("RuntimeContext injection will not work");
             }
         });
     }
 
-    @Override
-    protected final Binder createBinder() { return new InputBinder(); }
-
+    /**
+     * Allows for injection binding of InputEvent and RuntimeContext
+     *
+     * Configure provides binding definitions using the exposed binding
+     * methods.
+     */
     private static class InputBinder extends AbstractReferencingBinder {
 
         @Override
-        public void configure(){
-            bindReferencingFactory(InputEvent.class, ReferencingInputEventFactory.class, new TypeLiteral<Ref<InputEvent>>() { });
-            bindReferencingFactory(RuntimeContext.class, ReferencingRuntimeContextFactory.class, new TypeLiteral<Ref<RuntimeContext>>() {
-            });
+        public void configure() {
+            bindReferencingFactory(InputEvent.class,
+                    ReferencingInputEventFactory.class,
+                    new TypeLiteral<Ref<InputEvent>>() { }
+                    );
+            bindReferencingFactory(RuntimeContext.class,
+                    ReferencingRuntimeContextFactory.class,
+                    new TypeLiteral<Ref<RuntimeContext>>() { }
+                    );
         }
+    }
+
+    @Override
+    protected final Binder createBinder() {
+        return new InputBinder();
     }
 
     private static class ReferencingInputEventFactory extends ReferencingFactory<InputEvent> {
@@ -180,8 +166,11 @@ public abstract class OracleFunctionsRequestHandler extends SimpleRequestHandler
         }
     }
 
+    /**
+     * Creates the response to be passed back to the functions platform
+     */
     @Override
-    protected SimpleResponseWriter<WrappedOutput> createResponseWriter(@Nonnull WrappedInput wrappedInput) {
+    protected SimpleResponseWriter<WrappedOutput> createResponseWriter(WrappedInput wrappedInput) {
         return new ResponseWriter();
     }
 
@@ -199,7 +188,7 @@ public abstract class OracleFunctionsRequestHandler extends SimpleRequestHandler
         }
 
         @Override
-        public void writeResponse(@Nonnull Response.StatusType statusType, @Nonnull Map<String, List<String>> headers, @Nonnull OutputStream outputStream) throws IOException {
+        public void writeResponse(Response.StatusType statusType, Map<String, List<String>> headers, OutputStream outputStream) throws IOException {
             // NOTE: This is a safe cast as it is set to a ByteArrayOutputStream by getEntityOutputStream
             // See JRestlessHandlerContainer class for more details
             String responseBody = ((ByteArrayOutputStream) outputStream).toString(StandardCharsets.UTF_8.name());
@@ -209,6 +198,10 @@ public abstract class OracleFunctionsRequestHandler extends SimpleRequestHandler
         }
     }
 
+    /**
+     * Upon request failure an empty output event will be returned to the functions platform as part of
+     * the WrappedOutput
+     */
     @Override
     protected WrappedOutput onRequestFailure(Exception e, WrappedInput wrappedInput, @Nullable JRestlessContainerRequest jRestlessContainerRequest) {
         System.err.println("request failed" + e.getMessage());
@@ -217,12 +210,27 @@ public abstract class OracleFunctionsRequestHandler extends SimpleRequestHandler
         return new WrappedOutput(outputEvent, null, Response.Status.INTERNAL_SERVER_ERROR);
     }
 
+    /**
+     * This simply allows the OracleFunctionsRequestHandler to access the runtime context so it can later
+     * be injected into JAX-RS functions
+     *
+     * @param rctx      The runtime context passed in from the oracle functions platform
+     */
     @FnConfiguration
-    public void setRuntimeContext(RuntimeContext rctx){
+    public void setRuntimeContext(RuntimeContext rctx) {
         this.rctx = rctx;
     }
 
-    public OutputEvent handleRequest(InputEvent inputEvent){
+    /**
+     * This is the entry point for the functions platform as set in the func.yaml
+     *
+     * The input event is wrapped up with its input stream
+     * The output event is obtained from the wrapped output
+     *
+     * @param inputEvent        The input event passed in from the functions platform
+     * @return The output event to the oracle functions platform
+     */
+    public final OutputEvent handleRequest(InputEvent inputEvent) {
         return inputEvent.consumeBody((inputStream) -> {
             WrappedInput wrappedInput = new WrappedInput(inputEvent, inputStream);
             WrappedOutput response = this.delegateRequest(wrappedInput);
@@ -244,10 +252,11 @@ public abstract class OracleFunctionsRequestHandler extends SimpleRequestHandler
         public final OutputEvent outputEvent;
         @Deprecated // This is not available to the user yet
         public final String body;
-        @Deprecated // The functions platform prevents the setting of a non-200 result (or 500 in the case of an external platform error)
+        @Deprecated
+        // The functions platform prevents the setting of a non-200 result (or 500 in the case of an external platform error)
         public final int statusCode;
 
-        public WrappedOutput(@Nonnull OutputEvent outputEvent, @Nullable String body, @Nonnull Response.StatusType statusType){
+        public WrappedOutput(OutputEvent outputEvent, @Nullable String body, Response.StatusType statusType) {
             requireNonNull(statusType);
             this.statusCode = statusType.getStatusCode();
             this.body = body;

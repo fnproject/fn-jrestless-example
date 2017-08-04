@@ -9,9 +9,6 @@ import com.jrestless.core.filter.ApplicationPathFilter;
 import com.oracle.faas.api.InputEvent;
 import com.oracle.faas.api.OutputEvent;
 import com.oracle.faas.api.RuntimeContext;
-import com.oracle.faas.runtime.HeadersImpl;
-import com.oracle.faas.runtime.QueryParametersImpl;
-import com.oracle.faas.runtime.ReadOnceInputEvent;
 import jersey.repackaged.com.google.common.collect.ImmutableMap;
 import org.glassfish.hk2.utilities.Binder;
 import org.glassfish.jersey.server.ResourceConfig;
@@ -27,7 +24,6 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 import java.io.ByteArrayInputStream;
 import java.net.URI;
-import java.util.HashMap;
 import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
@@ -36,7 +32,8 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 
 public class OracleFunctionsRequestHandlerIntTest {
-    private OracleFunctionsRequestObjectHandler handler;
+    private String DOMAIN_WITH_SCHEME = "http://www.example.com";
+    private OracleFunctionsRequestHandler handler;
     private TestService testService;
     private RuntimeContext runtimeContext = mock(RuntimeContext.class);
     private ByteArrayInputStream defaultBody;
@@ -48,12 +45,12 @@ public class OracleFunctionsRequestHandlerIntTest {
         defaultBody = new ByteArrayInputStream(new byte[]{});
     }
 
-    private OracleFunctionsRequestObjectHandler createAndStartHandler(ResourceConfig config, TestService testService) {
+    private OracleFunctionsRequestHandler createAndStartHandler(ResourceConfig config, TestService testService) {
         Binder binder = new InstanceBinder.Builder().addInstance(testService, TestService.class).build();
         config.register(binder);
         config.register(TestResource.class);
         config.register(ApplicationPathFilter.class);
-        OracleFunctionsRequestObjectHandler handler = new OracleFunctionsRequestObjectHandler();
+        OracleFunctionsRequestHandler handler = new OracleFunctionsRequestHandler(){};
         handler.init(config);
         handler.start();
         handler.setRuntimeContext(runtimeContext);
@@ -62,88 +59,78 @@ public class OracleFunctionsRequestHandlerIntTest {
 
     @Test
     public void testRuntimeContextInjection() {
-        InputEvent inputEvent = new ReadOnceInputEvent("myApp",
-                "/",
-                "www.example.com",
-                "DELETE",
-                defaultBody,
-                new HeadersImpl(new HashMap<>()),
-                new QueryParametersImpl());
+        InputEvent inputEvent = new DefaultInputEvent()
+                .setReqUrlAndRoute(DOMAIN_WITH_SCHEME + "/", "/")
+                .setMethod("DELETE")
+                .getInputEvent();
+
         handler.handleRequest(inputEvent);
         verify(testService).injectRuntimeContext(runtimeContext);
     }
 
     @Test
     public void testInputEventInjection() {
-        InputEvent inputEvent = new ReadOnceInputEvent("myApp",
-                "/inject-input-event",
-                "www.example.com",
-                "PUT",
-                defaultBody,
-                new HeadersImpl(new HashMap<>()),
-                new QueryParametersImpl());
+        InputEvent inputEvent = new DefaultInputEvent()
+                .setReqUrlAndRoute(DOMAIN_WITH_SCHEME + "/inject-input-event", "/inject-input-event")
+                .setMethod("PUT")
+                .getInputEvent();
+
         handler.handleRequest(inputEvent);
         verify(testService).injectInputEvent(same(inputEvent));
     }
 
     @Test
     public void testBaseUriWithoutHost() {
-        InputEvent inputEvent = new ReadOnceInputEvent("myApp",
-                "/uris",
-                "www.example.com",
-                "GET",
-                defaultBody,
-                new HeadersImpl(new HashMap<>()),
-                new QueryParametersImpl());
+        InputEvent inputEvent = new DefaultInputEvent()
+                .setReqUrlAndRoute(DOMAIN_WITH_SCHEME + "/uris", "/uris")
+                .setMethod("GET")
+                .getInputEvent();
+
         handler.handleRequest(inputEvent);
-        verify(testService).baseUri(URI.create("/"));
-        verify(testService).requestUri(URI.create("/uris"));
+        verify(testService).baseUri(URI.create(DOMAIN_WITH_SCHEME + "/"));
+        verify(testService).requestUri(URI.create(DOMAIN_WITH_SCHEME + "/uris"));
     }
 
     @Test
     public void testBaseUriWithHost() {
         Map<String, String> inputHeaders = ImmutableMap.of(HttpHeaders.HOST, "www.example.com");
-        InputEvent inputEvent = new ReadOnceInputEvent("myApp",
-                "/uris",
-                "www.example.com",
-                "GET",
-                defaultBody,
-                new HeadersImpl(inputHeaders),
-                new QueryParametersImpl());
+        InputEvent inputEvent = new DefaultInputEvent()
+                .setReqUrlAndRoute(DOMAIN_WITH_SCHEME + "/uris", "/uris")
+                .setMethod("GET")
+                .setHeaders(inputHeaders)
+                .getInputEvent();
+
         handler.handleRequest(inputEvent);
-        verify(testService).baseUri(URI.create("https://www.example.com/"));
-        verify(testService).requestUri(URI.create("https://www.example.com/uris"));
+        verify(testService).baseUri(URI.create(DOMAIN_WITH_SCHEME + "/"));
+        verify(testService).requestUri(URI.create(DOMAIN_WITH_SCHEME + "/uris"));
     }
 
     @Test
     public void testAppPathWithoutHost() {
         OracleFunctionsRequestHandler handlerWithAppPath = createAndStartHandler(new ApiResourceConfig(), testService);
-        InputEvent inputEvent = new ReadOnceInputEvent("myApp",
-                "/api/uris",
-                "www.example.com",
-                "GET",
-                defaultBody,
-                new HeadersImpl(new HashMap<>()),
-                new QueryParametersImpl());
+        InputEvent inputEvent = new DefaultInputEvent()
+                .setReqUrlAndRoute(DOMAIN_WITH_SCHEME + "/api/uris", "/api/uris")
+                .setMethod("GET")
+                .getInputEvent();
+
         handlerWithAppPath.handleRequest(inputEvent);
-        verify(testService).baseUri(URI.create("/api/"));
-        verify(testService).requestUri(URI.create("/api/uris"));
+        verify(testService).baseUri(URI.create(DOMAIN_WITH_SCHEME + "/api/"));
+        verify(testService).requestUri(URI.create(DOMAIN_WITH_SCHEME + "/api/uris"));
     }
 
     @Test
     public void testAppPathWithHost() {
         Map<String, String> inputHeaders = ImmutableMap.of(HttpHeaders.HOST, "www.example.com");
         OracleFunctionsRequestHandler handlerWithAppPath = createAndStartHandler(new ApiResourceConfig(), testService);
-        InputEvent inputEvent = new ReadOnceInputEvent("myApp",
-                "/api/uris",
-                "www.example.com",
-                "GET",
-                defaultBody,
-                new HeadersImpl(inputHeaders),
-                new QueryParametersImpl());
+        InputEvent inputEvent = new DefaultInputEvent()
+                .setReqUrlAndRoute(DOMAIN_WITH_SCHEME + "/api/uris", "/api/uris")
+                .setMethod("GET")
+                .setHeaders(inputHeaders)
+                .getInputEvent();
+
         handlerWithAppPath.handleRequest(inputEvent);
-        verify(testService).baseUri(URI.create("https://www.example.com/api/"));
-        verify(testService).requestUri(URI.create("https://www.example.com/api/uris"));
+        verify(testService).baseUri(URI.create(DOMAIN_WITH_SCHEME + "/api/"));
+        verify(testService).requestUri(URI.create(DOMAIN_WITH_SCHEME + "/api/uris"));
     }
 
     // Note: There is a better version of this test in OracleFunctionsFutureRequestHandlerTest
@@ -155,13 +142,12 @@ public class OracleFunctionsRequestHandlerIntTest {
         String contents = mapper.writeValueAsString(new OracleFunctionsRequestHandlerIntTest.AnObject("123"));
         ByteArrayInputStream body = new ByteArrayInputStream(contents.getBytes());
 
-        InputEvent inputEvent = new ReadOnceInputEvent("myApp",
-                "/round-trip",
-                "www.example.com",
-                "POST",
-                body,
-                new HeadersImpl(inputHeaders),
-                new QueryParametersImpl());
+        InputEvent inputEvent = new DefaultInputEvent()
+                .setReqUrlAndRoute(DOMAIN_WITH_SCHEME + "/round-trip", "/round-trip")
+                .setMethod("POST")
+                .setHeaders(inputHeaders)
+                .getInputEvent();
+
         OutputEvent outputEvent = handler.handleRequest(inputEvent);
 
         assertEquals(MediaType.APPLICATION_JSON, outputEvent.getContentType().get());
