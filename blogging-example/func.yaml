@@ -2,6 +2,5 @@ name: raej/jrest
 version: 0.0.1
 runtime: java
 cmd: com.oracle.faas.jrestlessexample.blog.BloggingApp::handleRequest
-path: /route/add
+path: /route/blogs
 format: http
-timeout: 1200

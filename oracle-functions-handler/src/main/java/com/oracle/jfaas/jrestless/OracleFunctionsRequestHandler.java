@@ -230,7 +230,7 @@ public abstract class OracleFunctionsRequestHandler extends SimpleRequestHandler
      * @param inputEvent        The input event passed in from the functions platform
      * @return The output event to the oracle functions platform
      */
-    public final OutputEvent handleRequest(InputEvent inputEvent) {
+    public final OutputEvent handleRequest(InputEvent inputEvent){
         return inputEvent.consumeBody((inputStream) -> {
             WrappedInput wrappedInput = new WrappedInput(inputEvent, inputStream);
             WrappedOutput response = this.delegateRequest(wrappedInput);

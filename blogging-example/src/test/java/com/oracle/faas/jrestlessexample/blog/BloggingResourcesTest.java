@@ -1,6 +1,6 @@
 package com.oracle.faas.jrestlessexample.blog;
 
-import com.oracle.faas.testing.FnTesting;
+import com.oracle.faas.testing.FnTestingRule;
 import org.apache.commons.io.IOUtils;
 import org.junit.Assert;
 import org.junit.Before;
@@ -13,7 +13,7 @@ import java.nio.file.Paths;
 
 public class BloggingResourcesTest {
     @Rule
-    public final FnTesting testing = FnTesting.createDefault();
+    public final FnTestingRule testing = FnTestingRule.createDefault();
 
     @Before
     public void configure() throws URISyntaxException {
