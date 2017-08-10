@@ -24,6 +24,20 @@ wait_for_http() {
   )
 }
 
+wait_for_docker_log() {
+  (
+  set +ex
+  local container="$1"
+  local line="$2"
+  local i
+  for i in {1..15}; do
+    docker logs "$container" 2>&1 | fgrep -q "$line" && exit
+    sleep 1
+  done
+  exit 1
+  )
+}
+
 # prefix each line, whilst evaluating --
 prefix_lines() {
   local prefix="$1"

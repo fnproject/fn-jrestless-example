@@ -7,7 +7,6 @@ import org.glassfish.jersey.server.ResourceConfig;
 public class BloggingApp extends OracleFunctionsRequestHandler {
 
     public BloggingApp() {
-        System.err.println("<-----------<-------------<-------------<-------------<-----------------");
 
         ResourceConfig config = new ResourceConfig();
         config.packages("com.oracle.faas.jrestlessexample.blog");

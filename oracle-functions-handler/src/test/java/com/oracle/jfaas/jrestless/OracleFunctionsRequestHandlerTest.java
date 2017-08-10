@@ -25,6 +25,7 @@ import java.util.Map;
 
 import static java.util.Collections.singletonList;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.mockito.Mockito.mock;
 
 public class OracleFunctionsRequestHandlerTest {
@@ -140,7 +141,7 @@ public class OracleFunctionsRequestHandlerTest {
         RuntimeException exception = new RuntimeException("Testing that onRequestFailure works");
 
         OracleFunctionsRequestHandler.WrappedOutput output = requestHandler.onRequestFailure(exception, wrappedInput, null);
-        assertEquals(false, output.outputEvent.isSuccess());
+        assertFalse(output.outputEvent.isSuccess());
     }
 
     private static class DefaultOracleFunctionsRequestHandler extends OracleFunctionsRequestHandler{

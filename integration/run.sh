@@ -37,9 +37,6 @@ export NO_PROXY=$no_proxy
 
 wait_for_http "$API_URL"
 
-fn apps list
-
-
 # Set locations of test resources
 export TEST_DIR="$(realpath "$(dirname "$0")"/../blogging-example )"
 TEST_SQL_SETUP_DIR="$TEST_DIR/src/test/resources"
@@ -67,18 +64,18 @@ export MYSQL_HOST=$(
           -f '{{range .NetworkSettings.Networks}}{{ .IPAddress }}{{end}}' \
           $MYSQL_CONTAINER_ID
    )
+defer docker logs $MYSQL_CONTAINER_ID
+
+wait_for_docker_log $MYSQL_CONTAINER_ID "running /docker-entrypoint-initdb.d/dbZZZsetup-over.sql"
 
 echo "Mysql listening on docker network at address $MYSQL_HOST"
-
-
-sleep 5
 
 # Run the main integration test
 
 "$(dirname "$0")"/smoke-test.sh
 
 docker ps -a | head
-docker logs $MYSQL_CONTAINER_ID
+
 
 set +x
 echo Success!

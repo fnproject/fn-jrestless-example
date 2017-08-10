@@ -22,7 +22,6 @@ public class BloggingResource {
     @Path("/blogs")
     @Produces({MediaType.APPLICATION_JSON})
     public List<BlogPost> getAllPosts() {
-        System.err.println(">----------->------------->-----BLOGS-------->------------->----------------");
         return database.getAllPosts();
     }
 
