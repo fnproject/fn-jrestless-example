@@ -9,7 +9,8 @@ SUFFIX=$(git rev-parse HEAD)
 
 
 # Stand up the functions runner
-FUNCTIONS_CONTAINER_ID=$(docker run -d -p 8080 --name functions-$SUFFIX -v /var/run/docker.sock:/var/run/docker.sock funcy/functions)
+docker pull fnproject/functions
+FUNCTIONS_CONTAINER_ID=$(docker run -d -p 8080 --name functions-$SUFFIX -v /var/run/docker.sock:/var/run/docker.sock fnproject/functions)
 defer docker rm -f $FUNCTIONS_CONTAINER_ID
 
 

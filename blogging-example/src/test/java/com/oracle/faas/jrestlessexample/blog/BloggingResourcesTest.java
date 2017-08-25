@@ -1,6 +1,6 @@
 package com.oracle.faas.jrestlessexample.blog;
 
-import com.oracle.faas.testing.FnTestingRule;
+import com.fnproject.fn.testing.FnTestingRule;
 import org.apache.commons.io.IOUtils;
 import org.junit.Assert;
 import org.junit.Before;

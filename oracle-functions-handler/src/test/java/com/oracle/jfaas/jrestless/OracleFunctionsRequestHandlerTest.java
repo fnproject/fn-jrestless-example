@@ -1,12 +1,11 @@
 package com.oracle.jfaas.jrestless;
 
+import com.fnproject.fn.api.Headers;
+import com.fnproject.fn.api.InputEvent;
 import com.jrestless.core.container.JRestlessHandlerContainer;
 import com.jrestless.core.container.handler.SimpleRequestHandler;
 import com.jrestless.core.container.io.JRestlessContainerRequest;
 import com.jrestless.core.container.io.RequestAndBaseUri;
-import com.oracle.faas.api.Headers;
-import com.oracle.faas.api.InputEvent;
-import com.oracle.faas.runtime.HeadersImpl;
 import jersey.repackaged.com.google.common.collect.ImmutableMap;
 import org.junit.Assert;
 import org.junit.Before;
@@ -44,7 +43,7 @@ public class OracleFunctionsRequestHandlerTest {
 
     @Test
     public void createContainerRequest_testHttpMethodAndHeaders() {
-        Headers headers = new HeadersImpl(ImmutableMap.of("key_one", "value_one", "key_two", "value_two"));
+        Headers headers = Headers.fromMap(ImmutableMap.of("key_one", "value_one", "key_two", "value_two"));
         InputEvent inputEvent = new DefaultInputEvent()
                 .setHeaders(headers)
                 .getInputEvent();

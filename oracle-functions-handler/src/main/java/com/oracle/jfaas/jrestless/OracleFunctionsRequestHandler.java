@@ -1,14 +1,14 @@
 package com.oracle.jfaas.jrestless;
 
+import com.fnproject.fn.api.FnConfiguration;
+import com.fnproject.fn.api.InputEvent;
+import com.fnproject.fn.api.OutputEvent;
+import com.fnproject.fn.api.RuntimeContext;
 import com.jrestless.core.container.dpi.AbstractReferencingBinder;
 import com.jrestless.core.container.handler.SimpleRequestHandler;
 import com.jrestless.core.container.io.DefaultJRestlessContainerRequest;
 import com.jrestless.core.container.io.JRestlessContainerRequest;
 import com.jrestless.core.container.io.RequestAndBaseUri;
-import com.oracle.faas.api.FnConfiguration;
-import com.oracle.faas.api.InputEvent;
-import com.oracle.faas.api.OutputEvent;
-import com.oracle.faas.api.RuntimeContext;
 import org.glassfish.hk2.api.TypeLiteral;
 import org.glassfish.hk2.utilities.Binder;
 import org.glassfish.jersey.internal.inject.ReferencingFactory;

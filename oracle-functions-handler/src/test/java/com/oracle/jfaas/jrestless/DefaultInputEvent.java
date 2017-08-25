@@ -1,15 +1,14 @@
 package com.oracle.jfaas.jrestless;
 
-import com.oracle.faas.api.Headers;
-import com.oracle.faas.api.InputEvent;
-import com.oracle.faas.api.QueryParameters;
-import com.oracle.faas.runtime.HeadersImpl;
-import com.oracle.faas.runtime.QueryParametersImpl;
-import com.oracle.faas.runtime.ReadOnceInputEvent;
+
+import com.fnproject.fn.api.Headers;
+import com.fnproject.fn.api.InputEvent;
+import com.fnproject.fn.api.QueryParameters;
+import com.fnproject.fn.runtime.QueryParametersImpl;
+import com.fnproject.fn.runtime.ReadOnceInputEvent;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -20,7 +19,7 @@ public class DefaultInputEvent {
     private String requestUrl = DOMAIN_WITH_SCHEME + "/r/route";
     private String method = "GET";
     private InputStream body = new ByteArrayInputStream(new byte[]{});
-    private Headers headers = new HeadersImpl(new HashMap<>());
+    private Headers headers = Headers.emptyHeaders();
     private QueryParameters parameters = new QueryParametersImpl();
 
     public DefaultInputEvent(){
@@ -53,7 +52,7 @@ public class DefaultInputEvent {
     }
 
     public DefaultInputEvent setHeaders(Map<String,String> headers){
-        this.headers = new HeadersImpl(headers);
+        this.headers = Headers.fromMap(headers);
         return this;
     }
 

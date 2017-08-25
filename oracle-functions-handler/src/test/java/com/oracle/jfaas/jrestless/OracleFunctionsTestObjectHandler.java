@@ -1,6 +1,7 @@
 package com.oracle.jfaas.jrestless;
 
-import com.oracle.faas.api.InputEvent;
+
+import com.fnproject.fn.api.InputEvent;
 
 public class OracleFunctionsTestObjectHandler extends OracleFunctionsRequestHandler {
 

@@ -1,6 +1,6 @@
 package com.oracle.faas.jrestlessexample.blog;
 
-import com.oracle.faas.api.RuntimeContext;
+import com.fnproject.fn.api.RuntimeContext;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
