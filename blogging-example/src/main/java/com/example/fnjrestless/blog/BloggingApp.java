@@ -10,7 +10,7 @@ public class BloggingApp extends FnRequestHandler {
     public BloggingApp() {
 
         ResourceConfig config = new ResourceConfig();
-        config.packages("com.oracle.faas.jrestlessexample.blog");
+        config.packages(getClass().getPackage().getName());
         config.register(FnFeature.class);
 
         init(config);

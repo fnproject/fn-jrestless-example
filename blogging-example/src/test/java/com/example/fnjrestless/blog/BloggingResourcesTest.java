@@ -1,5 +1,6 @@
 package com.example.fnjrestless.blog;
 
+import com.fnproject.fn.testing.FnResult;
 import com.fnproject.fn.testing.FnTestingRule;
 import org.apache.commons.io.IOUtils;
 import org.junit.Assert;
@@ -8,7 +9,9 @@ import org.junit.Rule;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URISyntaxException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Paths;
 
 public class BloggingResourcesTest {
@@ -21,6 +24,7 @@ public class BloggingResourcesTest {
         testing.setConfig("DB_USER", "sa");
         testing.setConfig("DB_PASSWORD", "");
         testing.setConfig("DB_DRIVER", "org.h2.Driver");
+        testing.addSharedClassPrefix("");
     }
 
     @Test
@@ -41,7 +45,10 @@ public class BloggingResourcesTest {
 
         testing.thenRun(BloggingApp.class, "handleRequest");
 
-        Assert.assertEquals("TestingBlogpost added", testing.getOnlyResult().getBodyAsString());
+        FnResult result = testing.getOnlyResult();
+
+        Assert.assertEquals(200,result.getStatus());
+        Assert.assertEquals("TestingBlogpost added", result.getBodyAsString());
     }
 
     @Test
@@ -68,8 +75,10 @@ public class BloggingResourcesTest {
                 .enqueue();
 
         testing.thenRun(BloggingApp.class, "handleRequest");
+        InputStream indexHtml = getClass().getResourceAsStream("/index.html");
+        String html = IOUtils.toString(indexHtml,StandardCharsets.UTF_8);
 
-        Assert.assertEquals(IOUtils.toString(getClass().getResourceAsStream("/index.html")), testing.getOnlyResult().getBodyAsString());
+        Assert.assertEquals(html, testing.getOnlyResult().getBodyAsString());
     }
 
 }
