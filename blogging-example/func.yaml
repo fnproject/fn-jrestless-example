@@ -1,6 +1,6 @@
 name: raej/jrest
 version: 0.0.1
 runtime: java
-cmd: com.oracle.faas.jrestlessexample.blog.BloggingApp::handleRequest
+cmd: com.example.fnjrestless.blog.BloggingApp::handleRequest
 path: /route/blogs
 format: http
