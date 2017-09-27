@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -ex
+set -e
 
 release_version=$(cat release.version)
 if [[ $release_version =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] ; then
@@ -22,9 +22,6 @@ else
    echo Invalid new version $new_version
    exit 1
 fi
-
-mvn versions:set -DgenerateBackupPoms=false  -DnewVersion $new_version
-
 
 
 # Deploy to bintray

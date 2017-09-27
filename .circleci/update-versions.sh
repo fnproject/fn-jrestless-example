@@ -8,6 +8,7 @@ else
    exit 1
 fi
 
+pushd jrestless-handler
 mvn versions:set -D newVersion=${release_version}  -D generateBackupPoms=false versions:update-child-modules
-
+popd
 
