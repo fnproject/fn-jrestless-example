@@ -10,7 +10,7 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <fnproject-fdk.version>1.0.35</fnproject-fdk.version>
-        <fn-jrestless.version>1.0.0-SNAPSHOT</fn-jrestless.version>
+        <fn-jrestless.version>1.0.2</fn-jrestless.version>
     </properties>
     <dependencies>
         <dependency>
