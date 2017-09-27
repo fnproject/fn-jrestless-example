@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -e
+set -ex
 
 release_version=$(cat release.version)
 if [[ $release_version =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] ; then
@@ -24,8 +24,9 @@ else
 fi
 
 
+pushd jrestless-handler
 # Deploy to bintray
-mvn -s ./settings-deploy.xml \
+mvn -s ../settings-deploy.xml \
     -DskipTests \
     -DaltDeploymentRepository="fnproject-release-repo::default::$MVN_RELEASE_REPO" \
     -Dfnproject-release-repo.username="$MVN_RELEASE_USER" \
@@ -33,6 +34,7 @@ mvn -s ./settings-deploy.xml \
     -DdeployAtEnd=true \
     clean deploy
 
+popd
 # Push result to git
 
 echo $new_version > release.version
