@@ -19,11 +19,9 @@ jobs:
       - run:
           name: Build and test
           command: |
-            mvn verify
+             cd jrestless-handler;  mvn verify
       - store_test_results:
-          path: handler/target/surefire-reports
-      - store_test_results:
-          path: blogging-example/target/surefire-reports
+          path: jrestless-handler/target/surefire-reports
       - deploy:
           name: Release new version (if master)
           command: |

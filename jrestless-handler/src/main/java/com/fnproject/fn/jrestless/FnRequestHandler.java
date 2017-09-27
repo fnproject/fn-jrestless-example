@@ -217,7 +217,7 @@ public abstract class FnRequestHandler extends SimpleRequestHandler<FnRequestHan
      * This simply allows the FnRequestHandler to access the runtime context so it can later
      * be injected into JAX-RS functions
      *
-     * @param rctx      The runtime context passed in from the oracle functions platform
+     * @param rctx      The runtime context passed in from the Fn java  FDK
      */
     @FnConfiguration
     public void setRuntimeContext(RuntimeContext rctx) {
