@@ -8,11 +8,11 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Paths;
 
 public class BloggingResourcesTest {
     @Rule
@@ -20,7 +20,7 @@ public class BloggingResourcesTest {
 
     @Before
     public void configure() throws URISyntaxException {
-        testing.setConfig("DB_URL", String.format("jdbc:h2:mem:test;MODE=MySQL;INIT=runscript from '%s'", Paths.get(getClass().getClassLoader().getResource("dbSetup.sql").toURI()).toAbsolutePath()));
+        testing.setConfig("DB_URL", String.format("jdbc:h2:mem:test;MODE=MySQL;INIT=runscript from '%s'", new File("src/test/resources/dbSetup.sql").getAbsolutePath()));
         testing.setConfig("DB_USER", "sa");
         testing.setConfig("DB_PASSWORD", "");
         testing.setConfig("DB_DRIVER", "org.h2.Driver");
@@ -62,7 +62,7 @@ public class BloggingResourcesTest {
 
         testing.thenRun(BloggingApp.class, "handleRequest");
 
-        Assert.assertEquals("[{\"date\":\"Friday\",\"author\":\"Rae\",\"title\":\"Testing\",\"body\":\"Data to retrieve\"}]", testing.getOnlyResult().getBodyAsString());
+        Assert.assertEquals("[{\"date\":\"Friday\",\"author\":\"Rae\",\"title\":\"Testing\",\"body\":\"Welcome to Fn! we have just created a serverless Jersey App\"}]", testing.getOnlyResult().getBodyAsString());
     }
 
     @Test

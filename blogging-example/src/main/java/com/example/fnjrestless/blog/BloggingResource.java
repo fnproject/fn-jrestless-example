@@ -7,8 +7,10 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import java.io.InputStream;
 import java.sql.Connection;
+import java.sql.Driver;
 import java.sql.DriverManager;
 import java.util.List;
+import java.util.Properties;
 
 @Path("/route")
 public class BloggingResource {
@@ -43,13 +45,19 @@ public class BloggingResource {
 
     public BlogStore setUpDatabase(RuntimeContext context) {
         try {
-            Class.forName(context.getConfigurationByKey("DB_DRIVER").orElseThrow(() -> new RuntimeException("DB_DRIVER not configurable")));
+            Class<Driver> driver = (Class<Driver>) Class.forName(context.getConfigurationByKey("DB_DRIVER").orElseThrow(() -> new RuntimeException("DB_DRIVER not configured")));
 
-            Connection connection = null;
+            String dbUrl = context.getConfigurationByKey("DB_URL").orElseThrow(() -> new RuntimeException("DB_URL not configured"));
+            String dbUser = context.getConfigurationByKey("DB_USER").orElseThrow(() -> new RuntimeException("DB_USER not configured"));
+            String dbPasswd = context.getConfigurationByKey("DB_PASSWORD").orElseThrow(() -> new RuntimeException("DB_PASSWORD not configured"));
 
-            connection = DriverManager.getConnection(context.getConfigurationByKey("DB_URL").orElseThrow(() -> new RuntimeException("DB_URL not configurable")),
-                    context.getConfigurationByKey("DB_USER").orElseThrow(() -> new RuntimeException("DB_USER not configurable")),
-                    context.getConfigurationByKey("DB_PASSWORD").orElseThrow(() -> new RuntimeException("DB_PASSWORD not configurable")));
+
+            Properties info = new Properties();
+            info.setProperty("user",dbUser);
+            info.setProperty("password",dbPasswd);
+
+            Connection connection = driver.newInstance().connect(dbUrl,info);
+
             return new BlogStore(connection);
 
         } catch (Exception e) {

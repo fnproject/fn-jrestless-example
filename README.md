@@ -1,15 +1,15 @@
-# Fn Project JRestless support 
+# Fn Project JRestless plugin 
 
 Author: [Rae Jeffries-Harris](https://github.com/RaeJ) 
 
-This module allows you to deploy JAX-RS application onto Fn as serverless application. 
+This module allows you to deploy Jersey/JAX-RS applications onto Fn. 
 
 ## Description
-This demonstrates an extension to the [JRestless](https://github.com/bbilger/jrestless) framework that allows you to run a JAX-RS application using the Fn  platform based on the [Fn Java FDK](https://github.com/fnproject/fn-java-fdk)
+This demonstrates an extension to the [JRestless](https://github.com/bbilger/jrestless) framework that allows you to run a JAX-RS application using the Fn  platform based on the [Fn Java FDK](https://github.com/fnproject/fdk-java)
 
 ## Fn Usage Example
 
-Make sure you have all the required pre-requisites for using [Fn Java](https://github.com/fnproject/fn-java-fdk) as described in the docs.
+Make sure you have all the required pre-requisites for using the  [Fn Java FDK](https://github.com/fnproject/fdk-java) as described in the docs.
 
 Create a new function using the Fn  CLI as you would if simply creating a Java Function as a Service:
 
@@ -25,7 +25,7 @@ Ignore the HelloFunction class for now - we will replace this later on.
 
 Replace the func.yaml file with the following contents:
 ```yaml
-name: jbloggs/jrestless
+name: fnjaxrs
 version: 0.0.1
 runtime: java
 cmd: com.example.faas.RequestHandler::handleRequest
@@ -39,7 +39,7 @@ Add the `jrestless-handler`  to  the pom.xml file:
 <dependency>
     <groupId>com.fnproject.fn</groupId>
     <artifactId>jrestless-handler</artifactId>
-    <version>1.0.0</version>
+    <version>1.0.1</version>
 </dependency>
 ```
 

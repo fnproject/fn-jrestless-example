@@ -21,7 +21,7 @@ public class BlogStore {
 
         if(currentPost.getBody() != null){
             try(PreparedStatement st = connection.prepareStatement("UPDATE Blogpost SET author = ?," +
-                    "date = ?, body = ? WHERE title = ?;")){
+                    "dt = ?, body = ? WHERE title = ?;")){
                 st.setString(1, post.getAuthor());
                 st.setString(2, post.getDate());
                 st.setString(3, post.getBody());
@@ -48,13 +48,13 @@ public class BlogStore {
     }
 
     public List<BlogPost> getAllPosts() {
-        try(PreparedStatement st = connection.prepareStatement("SELECT * FROM Blogpost")){
+        try(PreparedStatement st = connection.prepareStatement("SELECT * FROM Blogpost ORDER BY dt DESC")){
             ResultSet rs = st.executeQuery();
 
             List<BlogPost> allPosts = new ArrayList<>();
             while(rs.next()){
                 String author = rs.getString("author");
-                String date = rs.getString("date");
+                String date = rs.getString("dt");
                 String body = rs.getString("body");
                 String title = rs.getString("title");
 
@@ -86,7 +86,7 @@ public class BlogStore {
 
             while(rs.next()){
                 String author = rs.getString("author");
-                String date = rs.getString("date");
+                String date = rs.getString("dt");
                 String body = rs.getString("body");
 
                 post.setAuthor(author);

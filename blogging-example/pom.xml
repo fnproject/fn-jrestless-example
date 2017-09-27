@@ -22,6 +22,11 @@
 
         <dependency>
             <groupId>com.fnproject.fn</groupId>
+            <artifactId>api</artifactId>
+            <version>${fnproject-fdk.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.fnproject.fn</groupId>
             <artifactId>testing</artifactId>
             <version>${fnproject-fdk.version}</version>
             <scope>test</scope>
