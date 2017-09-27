@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -ex
+set -e
 
 release_version=$(cat release.version)
 if [[ $release_version =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] ; then
