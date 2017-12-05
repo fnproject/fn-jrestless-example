@@ -55,7 +55,7 @@ Some config for your app:
 
 ```shell
 ## The IP address of the host from inside a container
-$ export DOCKER_HOST_IP=$(docker inspect --type container -f '{{.NetworkSettings.Gateway}}' functions)
+$ export DOCKER_HOST_IP=$(docker inspect --type container -f '{{.NetworkSettings.Gateway}}' fnserver)
 
 fn apps config set jaxrs DB_URL "jdbc:mysql://${DOCKER_HOST_IP}/POSTS"
 fn apps config set jaxrs DB_DRIVER com.mysql.jdbc.Driver
@@ -64,10 +64,11 @@ fn apps config set jaxrs DB_PASSWORD SgRoV3s
 ```
 
 Map the routes used by the app to the function:
+(use whichever image version was published in the previous deploy )
 
 ```shell
-fn routes create jaxrs /route/html
-fn routes create jaxrs /route/blogs
+fn routes create jaxrs /route/html --image raej/jrest:0.0.2
+fn routes create jaxrs /route/blogs --image raej/jrest:0.0.2
 # fn routes create jaxrs /route/add  <-- this was added by `fn deploy` earlier
 ```
 
@@ -91,12 +92,3 @@ Fn treats each route independently, so there will be *at least* one per endpoint
 Fn currently does not support wildcards in routes. Issues [#170](https://github.com/fnproject/fn/issues/170) and [#256](https://github.com/fnproject/fn/issues/256) track current proposals to fix this.
 
 
-### QUESTION: I am building behind an HTTP proxy.
-
-That's not a question. However, you have my sympathy. You will need to specify its details in the `ENV MAVEN_OPTS` line of the Dockerfile before you run `fn build`.
-
-
-### QUESTION: Why do I even need a custom Dockerfile?
-
-Because until [the PR](https://github.com/bbilger/jrestless/pull/43) is merged into JRestless, support for Fn is not included available from any central repo, so we have bundled the jar in this repo and used the custom Dockerfile
-to include it from disk. Once support is merged into JRestless we can simplify this part of the build.

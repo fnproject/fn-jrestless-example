@@ -10,7 +10,7 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <fnproject-fdk.version>1.0.42</fnproject-fdk.version>
+	<fnproject-fdk.version>1.0.52</fnproject-fdk.version>
     </properties>
 
     <dependencies>
@@ -27,7 +27,8 @@
             <version>${fnproject-fdk.version}</version>
         </dependency>
 
-        <dependency>
+	
+	<dependency>
             <groupId>com.fnproject.fn</groupId>
             <artifactId>testing</artifactId>
             <version>${fnproject-fdk.version}</version>

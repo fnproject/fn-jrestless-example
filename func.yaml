@@ -1,6 +1,6 @@
 name: raej/jrest
-version: 0.0.1
-runtime: java
+version: 0.0.2
+runtime: java8
 cmd: com.example.fnjrestless.blog.BloggingApp::handleRequest
 format: http
 timeout: 120
